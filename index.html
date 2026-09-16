@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Locking Protocol Animation | DBMS Virtual Lab</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔒</text></svg>">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <!-- ═══════════════ NAVIGATION BAR ═══════════════ -->
+  <nav id="main-nav">
+    <div class="nav-brand">
+      <i class="fas fa-lock"></i>
+      <div>
+        <h1>Locking Protocol Animation</h1>
+        <span class="subtitle">DBMS Module 5 — Interactive Visualization</span>
+      </div>
+    </div>
+    
+    <div class="nav-links" id="nav-links">
+      <a href="#" class="nav-link active" data-section="simulator"><i class="fas fa-home"></i> Simulator</a>
+      <a href="#" class="nav-link" data-section="learn"><i class="fas fa-book"></i> Learn</a>
+      <a href="#" class="nav-link" data-section="help"><i class="fas fa-circle-question"></i> Help</a>
+      <a href="#" class="nav-link" data-section="download"><i class="fas fa-download"></i> Download</a>
+      <a href="#" class="nav-link" data-section="analytics"><i class="fas fa-chart-bar"></i> Analytics</a>
+      <a href="#" class="nav-link" data-section="developed-by"><i class="fas fa-code"></i> Developed By</a>
+    </div>
+    
+    <div class="nav-right">
+      <button id="theme-toggle" class="btn btn-outline btn-icon" aria-label="Toggle theme">
+        <i class="fas fa-moon"></i>
+      </button>
+      <button id="nav-hamburger" class="btn btn-outline btn-icon nav-hamburger" aria-label="Menu">
+        <i class="fas fa-bars"></i>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ═══════════════ SECTION: SIMULATOR ═══════════════ -->
+  <div id="section-simulator" class="page-section active-section">
+    
+    <!-- Transaction Status Bar -->
+    <div id="tx-status-bar" class="tx-status-bar"></div>
+    
+    <main id="dashboard">
+      
+      <!-- LEFT PANEL: Input -->
+      <aside id="input-panel">
+        <h2><i class="fas fa-sliders"></i> Configuration</h2>
+        
+        <!-- Protocol Selection -->
+        <div class="input-group">
+          <label for="protocol-select">Protocol Type</label>
+          <select id="protocol-select">
+            <option value="basic-2pl">Basic Two-Phase Locking</option>
+            <option value="strict-2pl">Strict Two-Phase Locking</option>
+            <option value="rigorous-2pl">Rigorous Two-Phase Locking</option>
+          </select>
+        </div>
+
+        <!-- Example Selection -->
+        <div class="input-group">
+          <label for="example-select">Load Example</label>
+          <select id="example-select">
+            <option value="">— Select Example —</option>
+          </select>
+        </div>
+
+        <!-- Transaction Editor -->
+        <div class="input-group">
+          <label for="transaction-editor">Transactions <span class="hint">(R=Read, W=Write, C=Commit)</span></label>
+          <textarea id="transaction-editor" rows="6" placeholder="T1: R(A), W(B), C&#10;T2: R(A), R(B), W(A), C"></textarea>
+        </div>
+
+        <!-- Schedule Mode -->
+        <div class="input-group">
+          <label class="checkbox-label" for="custom-schedule-toggle">
+            <input type="checkbox" id="custom-schedule-toggle">
+            Custom Schedule Order
+          </label>
+          <textarea id="custom-schedule-editor" rows="4" placeholder="T1:R(A), T2:R(A), T1:W(B), T2:W(A), T1:C, T2:C" style="display:none;"></textarea>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls-group">
+          <button id="btn-run" class="btn btn-primary"><i class="fas fa-play"></i> Run All</button>
+          <button id="btn-step" class="btn btn-secondary"><i class="fas fa-forward-step"></i> Step</button>
+          <button id="btn-step-back" class="btn btn-secondary"><i class="fas fa-backward-step"></i> Back</button>
+          <button id="btn-reset" class="btn btn-danger"><i class="fas fa-rotate-left"></i> Reset</button>
+        </div>
+
+        <!-- Auto-play -->
+        <div class="input-group">
+          <div class="speed-control">
+            <button id="btn-auto-play" class="btn btn-outline"><i class="fas fa-play"></i> Auto Play</button>
+            <div class="speed-slider-group">
+              <label for="speed-slider">Speed: <span id="speed-label">1x</span></label>
+              <input type="range" id="speed-slider" min="0.5" max="3" step="0.5" value="1">
+            </div>
+          </div>
+        </div>
+
+        <!-- Step Counter -->
+        <div class="step-info">
+          <span id="step-counter">Step 0 of 0</span>
+        </div>
+
+        <!-- Export -->
+        <div class="controls-group export-group">
+          <button id="btn-export-json" class="btn btn-outline"><i class="fas fa-file-code"></i> Export JSON</button>
+          <button id="btn-export-pdf" class="btn btn-outline"><i class="fas fa-file-pdf"></i> Export PDF</button>
+        </div>
+
+        <!-- History -->
+        <div class="history-section">
+          <h3>History <span id="history-count" class="badge">0</span></h3>
+          <div id="history-list"></div>
+          <button id="btn-clear-history" class="btn btn-sm btn-danger"><i class="fas fa-trash"></i> Clear History</button>
+        </div>
+      </aside>
+
+      <!-- CENTER PANEL: Visualization -->
+      <section id="visualization-panel">
+        <!-- Validation Messages -->
+        <div id="validation-messages"></div>
+
+        <!-- Visualization Tabs -->
+        <div class="viz-tabs">
+          <button id="tab-lock-table" class="tab-btn tab-active"><i class="fas fa-table"></i> Lock Table</button>
+          <button id="tab-wait-graph" class="tab-btn"><i class="fas fa-diagram-project"></i> Wait-For Graph</button>
+          <button id="tab-timeline" class="tab-btn"><i class="fas fa-timeline"></i> Timeline</button>
+        </div>
+
+        <!-- Tab Panels -->
+        <div id="viz-lock-table" class="tab-panel tab-panel-active">
+          <div id="lock-table-viz" class="viz-container"></div>
+        </div>
+        <div id="viz-wait-graph" class="tab-panel">
+          <div id="wait-graph-viz" class="viz-container"></div>
+        </div>
+        <div id="viz-timeline" class="tab-panel">
+          <div id="timeline-viz" class="viz-container"></div>
+        </div>
+      </section>
+
+      <!-- RIGHT PANEL: Explanation -->
+      <aside id="explanation-panel">
+        <h2><i class="fas fa-lightbulb"></i> Explanation</h2>
+        
+        <button id="theory-toggle" class="btn btn-outline btn-full"><i class="fas fa-book"></i> Background Theory</button>
+        <button id="btn-speech-toggle" class="btn btn-outline btn-full" style="margin-top:8px;" title="Read step explanations aloud"><i class="fas fa-volume-high"></i> Read Aloud</button>
+        <div id="theory-content" style="display:none;"></div>
+
+        <div id="explanation-steps"></div>
+      </aside>
+
+    </main>
+    
+    <!-- Deadlock Resolution Modal -->
+    <div id="deadlock-modal" class="modal-overlay" style="display:none;">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>🔴 Deadlock Detected!</h3>
+          <button class="modal-close" onclick="document.getElementById('deadlock-modal').style.display='none'">×</button>
+        </div>
+        <div class="modal-body">
+          <p id="deadlock-modal-info">Transactions involved in the deadlock:</p>
+          <div id="deadlock-modal-txns" class="deadlock-txn-list"></div>
+          <p class="modal-subtitle">Select a transaction to abort for deadlock resolution:</p>
+          <div id="deadlock-modal-buttons" class="deadlock-resolution-buttons"></div>
+        </div>
+        <div class="modal-footer">
+          <span class="modal-badge">Advanced Feature: Deadlock Resolution Simulation</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ SECTION: LEARN ═══════════════ -->
+  <div id="section-learn" class="page-section">
+    <div class="content-container">
+      <div class="section-header">
+        <h2><i class="fas fa-book"></i> Learn — Locking Protocol Animation</h2>
+        <p class="section-subtitle">Comprehensive guide to database locking and concurrency control</p>
+      </div>
+      <div id="learn-content"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ SECTION: HELP ═══════════════ -->
+  <div id="section-help" class="page-section">
+    <div class="content-container">
+      <div class="section-header">
+        <h2><i class="fas fa-circle-question"></i> Help — User Manual</h2>
+        <p class="section-subtitle">Step-by-step guide to using the Locking Protocol Animation</p>
+      </div>
+      <div id="help-content"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ SECTION: DOWNLOAD ═══════════════ -->
+  <div id="section-download" class="page-section">
+    <div class="content-container">
+      <div class="section-header">
+        <h2><i class="fas fa-download"></i> Download Simulation Report</h2>
+        <p class="section-subtitle">Export your simulation results in various formats</p>
+      </div>
+      <div class="download-cards">
+        <div class="download-card">
+          <div class="download-icon"><i class="fas fa-file-pdf"></i></div>
+          <h3>PDF Report</h3>
+          <p>Download a comprehensive PDF report containing simulation information, step-by-step execution, lock tables after each step, Wait-For Graph relationships, and a final summary.</p>
+          <button class="btn btn-primary btn-full" onclick="if(window.app) window.app.exportPDF(); else alert('Run a simulation first from the Simulator tab.');"><i class="fas fa-download"></i> Export PDF</button>
+        </div>
+        <div class="download-card">
+          <div class="download-icon"><i class="fas fa-file-code"></i></div>
+          <h3>JSON Data</h3>
+          <p>Download the raw simulation data as a JSON file. Useful for further analysis, integration with other tools, or programmatic access to simulation results.</p>
+          <button class="btn btn-primary btn-full" onclick="if(window.app) window.app.exportJSON(); else alert('Run a simulation first from the Simulator tab.');"><i class="fas fa-download"></i> Export JSON</button>
+        </div>
+      </div>
+      <div class="download-note">
+        <i class="fas fa-info-circle"></i>
+        <p><strong>Note:</strong> You must run a simulation first in the Simulator tab before exporting. The reports will contain the results of your most recent simulation.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ SECTION: ANALYTICS ═══════════════ -->
+  <div id="section-analytics" class="page-section">
+    <div class="content-container">
+      <div class="section-header">
+        <h2><i class="fas fa-chart-bar"></i> Analytics Dashboard</h2>
+        <p class="section-subtitle">Simulation statistics and usage insights</p>
+      </div>
+      <div id="analytics-content"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ SECTION: DEVELOPED BY ═══════════════ -->
+  <div id="section-developed-by" class="page-section">
+    <div class="content-container">
+      <div class="section-header">
+        <h2><i class="fas fa-code"></i> Developed By</h2>
+        <p class="section-subtitle">Meet the team behind this project</p>
+      </div>
+      
+      <!-- Team Members -->
+      <div class="team-grid" id="team-grid">
+        <!-- Team Member 1 -->
+        <div class="team-card">
+          <div class="team-photo">
+            <i class="fas fa-user-circle"></i>
+          </div>
+          <h3 class="team-name">Student Name 1</h3>
+          <p class="team-reg">Register Number: XXXXXXXX</p>
+        </div>
+        <!-- Team Member 2 -->
+        <div class="team-card">
+          <div class="team-photo">
+            <i class="fas fa-user-circle"></i>
+          </div>
+          <h3 class="team-name">Student Name 2</h3>
+          <p class="team-reg">Register Number: XXXXXXXX</p>
+        </div>
+      </div>
+
+      <!-- Guided By -->
+      <div class="guided-by">
+        <h3>Guided By</h3>
+        <div class="guide-card">
+          <div class="guide-photo">
+            <i class="fas fa-user-tie"></i>
+          </div>
+          <div>
+            <h4>Dr. Swaminathan A</h4>
+            <p>Assistant Professor</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI Usage Log -->
+      <div class="ai-log-section">
+        <h3><i class="fas fa-robot"></i> AI Development & Usage Log</h3>
+        <div class="table-responsive">
+          <table class="ai-log-table">
+            <thead>
+              <tr><th>Task</th><th>AI Tool Used</th><th>Purpose</th><th>Prompt / Description</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>UI Design</td>
+                <td>ChatGPT / Antigravity</td>
+                <td>Dashboard layout design</td>
+                <td>Design a modern dashboard UI for an interactive Locking Protocol Animation application</td>
+              </tr>
+              <tr>
+                <td>Simulation Logic</td>
+                <td><em>[Enter AI Tool]</em></td>
+                <td>Lock compatibility and 2PL implementation</td>
+                <td><em>[Enter prompt used]</em></td>
+              </tr>
+              <tr>
+                <td>Visualization</td>
+                <td><em>[Enter AI Tool]</em></td>
+                <td>D3.js visualizations for Lock Table, WFG, Timeline</td>
+                <td><em>[Enter prompt used]</em></td>
+              </tr>
+              <tr>
+                <td>Documentation</td>
+                <td><em>[Enter AI Tool]</em></td>
+                <td>Learn section and Help section content</td>
+                <td><em>[Enter prompt used]</em></td>
+              </tr>
+              <tr>
+                <td>Testing</td>
+                <td><em>[Enter AI Tool]</em></td>
+                <td>Test case design and debugging</td>
+                <td><em>[Enter prompt used]</em></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ AI CHATBOT ═══════════════ -->
+  <button id="chatbot-toggle" class="chatbot-fab" aria-label="Open AI Tutor">
+    <i class="fas fa-robot"></i>
+  </button>
+
+  <div id="chatbot-panel" class="chatbot-panel" style="display:none;">
+    <div class="chatbot-header">
+      <div class="chatbot-title">
+        <i class="fas fa-robot"></i>
+        <span>Locking Protocol AI Tutor</span>
+      </div>
+      <div class="chatbot-header-actions">
+        <button id="chatbot-clear" class="btn btn-sm btn-outline" title="Clear chat"><i class="fas fa-trash"></i></button>
+        <button id="chatbot-minimize" class="btn btn-sm btn-outline" title="Minimize"><i class="fas fa-minus"></i></button>
+        <button id="chatbot-close" class="btn btn-sm btn-outline" title="Close"><i class="fas fa-times"></i></button>
+      </div>
+    </div>
+    <div class="chatbot-body" id="chatbot-messages">
+      <div class="chat-message bot-message">
+        <div class="chat-avatar"><i class="fas fa-robot"></i></div>
+        <div class="chat-bubble">👋 Hi! I'm your AI Tutor for database locking. Ask me anything about locks, 2PL, deadlocks, or your current simulation!</div>
+      </div>
+    </div>
+    <div class="chatbot-quick-questions">
+      <button class="quick-q-btn" data-question="Explain this step">💡 Explain this step</button>
+      <button class="quick-q-btn" data-question="Why is this transaction waiting?">🔒 Why waiting?</button>
+      <button class="quick-q-btn" data-question="Why was the lock denied?">⚠️ Lock denied?</button>
+      <button class="quick-q-btn" data-question="Explain the current Wait-For Graph">🔄 Wait-For Graph</button>
+      <button class="quick-q-btn" data-question="Why did a deadlock occur?">🔴 Deadlock?</button>
+      <button class="quick-q-btn" data-question="Explain Basic Two-Phase Locking">🎓 Explain 2PL</button>
+    </div>
+    <div class="chatbot-input">
+      <input type="text" id="chatbot-input-field" placeholder="Type your question..." autocomplete="off">
+      <button id="chatbot-send" class="btn btn-primary btn-icon"><i class="fas fa-paper-plane"></i></button>
+    </div>
+  </div>
+
+  <!-- ═══════════════ FOOTER ═══════════════ -->
+  <footer>
+    <p>Locking Protocol Animation — DBMS Virtual Lab | Module 5</p>
+  </footer>
+
+  <!-- ═══════════════ SCRIPTS ═══════════════ -->
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <script src="js/simulator.js"></script>
+  <script src="js/examples.js"></script>
+  <script src="js/history.js"></script>
+  <script src="js/export.js"></script>
+  <script src="js/visualizer.js"></script>
+  <script src="js/explainer.js"></script>
+  <script src="js/learn.js"></script>
+  <script src="js/help.js"></script>
+  <script src="js/navigation.js"></script>
+  <script src="js/chatbot.js"></script>
+  <script src="js/speech.js"></script>
+  <script src="js/analytics.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
