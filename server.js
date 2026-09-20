@@ -2,8 +2,6 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 require('dotenv').config();
-
-const { GoogleGenerativeAI } = require('@google/generative-ai');
 const db = require('./db');
 
 const app = express();
@@ -121,32 +119,47 @@ app.post('/api/chat', async (req, res) => {
       return res.status(400).json({ error: 'Message is required' });
     }
 
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = process.env.GROQ_API_KEY;
     if (!apiKey) {
-      return res.status(503).json({ error: 'AI service not configured. Please add GEMINI_API_KEY to .env file.' });
+      return res.status(503).json({ error: 'AI service not configured. Please add GROQ_API_KEY to .env file.' });
     }
 
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+    // Build messages array for Groq (OpenAI-compatible format)
+    const messages = [{ role: 'system', content: SYSTEM_PROMPT }];
 
-    let prompt = SYSTEM_PROMPT + '\n\n';
-    
     if (context && context !== 'No simulation is currently active.') {
-      prompt += `CURRENT SIMULATION STATE:\n${context}\n\n`;
+      messages.push({ role: 'system', content: `CURRENT SIMULATION STATE:\n${context}` });
     }
 
     if (history && history.length > 0) {
-      prompt += 'CONVERSATION HISTORY:\n';
       history.forEach(msg => {
-        prompt += `${msg.role === 'user' ? 'Student' : 'Tutor'}: ${msg.content}\n`;
+        messages.push({ role: msg.role === 'user' ? 'user' : 'assistant', content: msg.content });
       });
-      prompt += '\n';
     }
 
-    prompt += `Student's Question: ${message}\n\nProvide a helpful, educational response:`;
+    messages.push({ role: 'user', content: message });
 
-    const result = await model.generateContent(prompt);
-    const reply = result.response.text();
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'openai/gpt-oss-20b',
+        messages,
+        temperature: 0.7,
+        max_tokens: 1024
+      })
+    });
+
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(errData.error?.message || `Groq API returned ${response.status}`);
+    }
+
+    const data = await response.json();
+    const reply = data.choices?.[0]?.message?.content || 'Sorry, I could not generate a response.';
 
     res.json({ reply });
   } catch (error) {
@@ -167,7 +180,7 @@ app.get('*', (req, res) => {
     app.listen(PORT, () => {
       console.log(`\n🔒 Locking Protocol Animation Server`);
       console.log(`   Running at: http://localhost:${PORT}`);
-      console.log(`   AI Tutor: ${process.env.GEMINI_API_KEY ? '✅ Enabled' : '❌ No API key (fallback mode)'}`);
+      console.log(`   AI Tutor: ${process.env.GROQ_API_KEY ? '✅ Enabled (Groq)' : '❌ No API key (fallback mode)'}`);
       console.log(`\n   Open http://localhost:${PORT} in your browser\n`);
     });
   } catch (err) {
