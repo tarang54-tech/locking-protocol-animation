@@ -46,7 +46,9 @@ T2: R(A), W(C), C</div>
           <ul>
             <li><code>R(A)</code> = Read data item A</li>
             <li><code>W(A)</code> = Write data item A</li>
+            <li><code>U(A)</code> = Unlock data item A (release the lock early — a protocol violation under Strict / Rigorous 2PL)</li>
             <li><code>C</code> = Commit transaction</li>
+            <li><code>A</code> = Abort transaction</li>
           </ul>
           <p>Each transaction must be on a separate line.</p>
         </div>

@@ -1,7 +1,11 @@
 class Navigation {
   constructor() {
     this.currentSection = 'simulator';
-    this.sections = ['simulator', 'learn', 'help', 'download', 'analytics', 'developed-by'];
+    this.sections = [
+      'simulator', 'learn', 'quiz', 'exams', 'leaderboard',
+      'history', 'analytics', 'help', 'download', 'developed-by'
+    ];
+    this.initialized = new Set();
   }
 
   init() {
@@ -61,6 +65,45 @@ class Navigation {
     // Auto-refresh analytics when visiting that section
     if (sectionId === 'analytics' && this.analytics) {
       this.analytics.refresh();
+    }
+
+    // Lazily initialise the data-driven sections the first time they are opened
+    this.initSection(sectionId);
+  }
+
+  /** Initialise a section once, the first time the user opens it. */
+  initSection(sectionId) {
+    if (this.initialized.has(sectionId)) return;
+    this.initialized.add(sectionId);
+
+    switch (sectionId) {
+      case 'quiz':
+        if (window.QuizSection) {
+          this.quiz = this.quiz || new window.QuizSection();
+          this.quiz.init();
+        }
+        break;
+      case 'exams':
+        if (window.ExamSection) {
+          this.exams = this.exams || new window.ExamSection();
+          this.exams.init();
+          this.exams.bindEvents();
+        }
+        break;
+      case 'leaderboard':
+        if (window.LeaderboardSection) {
+          this.leaderboard = this.leaderboard || new window.LeaderboardSection();
+          this.leaderboard.init();
+        }
+        break;
+      case 'history':
+        if (window.HistorySection) {
+          this.historySection = this.historySection || new window.HistorySection();
+          this.historySection.init();
+        }
+        break;
+      default:
+        break;
     }
   }
 

@@ -3,6 +3,160 @@ class LockVisualizer {
     this.tableContainerId = '#lock-table-viz';
     this.graphContainerId = '#wait-graph-viz';
     this.timelineContainerId = '#timeline-viz';
+    this.txColumnsContainerId = '#transaction-columns-viz';
+  }
+
+  /* ═══════════════════════════════════════════════════════════════
+   * TRANSACTION COLUMNS  (T1 | T2 | T3 ... one column per transaction)
+   * Renders the live execution state of every transaction so that each
+   * transaction gets its own clearly labelled, vertically stacked column.
+   * ═══════════════════════════════════════════════════════════════ */
+  renderTransactionColumns(data = {}) {
+    const container = d3.select(this.txColumnsContainerId);
+    container.selectAll('*').remove();
+
+    const {
+      txOperations = {},
+      opStatus = {},
+      transactionStates = {},
+      lockTable = {},
+      deadlockedTxns = [],
+      currentOpId = null
+    } = data;
+
+    const txIds = Object.keys(txOperations).sort((a, b) => {
+      const na = parseInt(String(a).replace(/\D/g, ''), 10);
+      const nb = parseInt(String(b).replace(/\D/g, ''), 10);
+      if (Number.isFinite(na) && Number.isFinite(nb)) return na - nb;
+      return String(a).localeCompare(String(b));
+    });
+
+    if (txIds.length === 0) {
+      container.append('div')
+        .attr('class', 'viz-empty-state')
+        .html('<i class="fas fa-columns"></i><p>No transactions to display.<br>Enter transactions in the Configuration panel and press <strong>Run All</strong> or <strong>Step</strong>.</p>');
+      return;
+    }
+
+    const wrapper = container.append('div').attr('class', 'tx-columns');
+
+    txIds.forEach(txId => {
+      const ops = txOperations[txId] || [];
+      const state = transactionStates[txId] || 'active';
+      const isDeadlocked = deadlockedTxns.includes(txId);
+
+      const column = wrapper.append('div')
+        .attr('class', `tx-column${isDeadlocked ? ' tx-column-deadlocked' : ''}`)
+        .attr('data-tx', txId);
+
+      /* ── Column header: name + live state ── */
+      const header = column.append('div').attr('class', 'tx-column-header');
+      header.append('div').attr('class', 'tx-column-name').text(txId);
+
+      const stateLabel = isDeadlocked ? 'Deadlocked' : state.charAt(0).toUpperCase() + state.slice(1);
+      header.append('span')
+        .attr('class', `tx-column-state tx-state-${isDeadlocked ? 'deadlocked' : state}`)
+        .text(stateLabel);
+
+      /* ── Locks currently held by this transaction ── */
+      const held = [];
+      Object.keys(lockTable).forEach(item => {
+        const holder = (lockTable[item].holders || []).find(h => h.txId === txId);
+        if (holder) held.push({ item, lockType: holder.lockType });
+      });
+      const locksRow = column.append('div').attr('class', 'tx-column-locks');
+      if (held.length > 0) {
+        held.forEach(lock => {
+          locksRow.append('span')
+            .attr('class', `tx-lock-badge tx-lock-${lock.lockType === 'X' ? 'x' : 's'}`)
+            .text(`${lock.lockType}(${lock.item})`);
+        });
+      } else {
+        locksRow.append('span').attr('class', 'tx-no-locks').text('No locks held');
+      }
+
+      /* ── Operations of this transaction, stacked vertically ── */
+      const list = column.append('ol').attr('class', 'tx-op-list');
+
+      ops.forEach((op, index) => {
+        const record = opStatus[op.opId] || { status: 'pending' };
+        const status = record.status || 'pending';
+
+        const item = list.append('li')
+          .attr('class', `tx-op tx-op-${status}${currentOpId === op.opId ? ' tx-op-current' : ''}`)
+          .attr('data-opid', op.opId)
+          .attr('title', `Step ${record.stepNumber != null ? record.stepNumber : '—'} · ${status}`);
+
+        item.append('span').attr('class', 'tx-op-index').text(index + 1);
+
+        const body = item.append('span').attr('class', 'tx-op-body');
+        body.append('span').attr('class', 'tx-op-label').text(this._formatOperation(op));
+
+        const meta = body.append('span').attr('class', 'tx-op-meta');
+
+        // Lock badge: S / X / S→X (upgrade) / released marker
+        if (record.lockType) {
+          // Effective lock type currently held for this operation
+          const effectiveType = record.upgraded ? 'X' : record.lockType;
+          const stillHeld = this._holdsLock(lockTable, txId, op.item, effectiveType);
+          const released = !stillHeld && (status === 'granted' || status === 'unblocked' || status === 'released' || status === 'committed' || status === 'aborted');
+
+          const badge = meta.append('span')
+            .attr('class', `tx-lock-badge${released ? ' tx-lock-released' : ''} tx-lock-${effectiveType === 'X' ? 'x' : 's'}`);
+          badge.text(record.upgraded ? 'S→X' : record.lockType);
+          if (record.upgraded) badge.attr('title', 'Lock upgraded from Shared to Exclusive');
+          if (released) badge.attr('title', 'Lock has been released');
+        }
+
+        meta.append('span')
+          .attr('class', 'tx-op-status')
+          .text(this._statusLabel(status));
+
+        if (currentOpId === op.opId) {
+          item.append('span').attr('class', 'tx-op-current-marker').attr('aria-label', 'Currently executing').text('▶');
+        }
+      });
+
+      if (ops.length === 0) {
+        list.append('li').attr('class', 'tx-op tx-op-empty').text('No operations');
+      }
+    });
+  }
+
+  /** Is the transaction currently holding the given lock type on the item? */
+  _holdsLock(lockTable, txId, item, lockType) {
+    const entry = lockTable && lockTable[item];
+    if (!entry) return false;
+    return (entry.holders || []).some(h => h.txId === txId && h.lockType === lockType);
+  }
+
+  /** Human readable label for an operation. */
+  _formatOperation(op) {    if (!op) return '';
+    switch (op.type) {
+      case 'read': return `R(${op.item})`;
+      case 'write': return `W(${op.item})`;
+      case 'commit': return 'Commit';
+      case 'abort': return 'Abort';
+      case 'unlock': return `Unlock(${op.item})`;
+      default: return op.type || '';
+    }
+  }
+
+  /** Human readable label for an operation status. */
+  _statusLabel(status) {
+    const labels = {
+      pending: 'Pending',
+      granted: 'Completed',
+      waiting: 'Waiting',
+      unblocked: 'Unblocked',
+      deadlock: 'Blocked — Deadlock',
+      released: 'Lock released',
+      committed: 'Committed',
+      aborted: 'Aborted',
+      buffered: 'Buffered',
+      ignored: 'Ignored'
+    };
+    return labels[status] || status;
   }
 
   // Render the lock table as an animated SVG table
@@ -336,6 +490,7 @@ class LockVisualizer {
     d3.select(this.tableContainerId).selectAll('*').remove();
     d3.select(this.graphContainerId).selectAll('*').remove();
     d3.select(this.timelineContainerId).selectAll('*').remove();
+    this.renderTransactionColumns({});
   }
 }
 

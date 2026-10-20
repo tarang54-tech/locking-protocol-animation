@@ -10,6 +10,38 @@
 </head>
 <body>
 
+  <!-- ═══════════════ SIGN-IN GATE (shown until the user signs in) ═══════════════ -->
+  <div id="app-gate" class="app-gate" style="display:none">
+    <div class="app-gate-bg" aria-hidden="true"></div>
+    <div class="app-gate-card">
+      <div class="app-gate-brand">
+        <span class="app-gate-logo"><i class="fas fa-lock"></i></span>
+        <div>
+          <h1>Locking Protocol Animation</h1>
+          <p>DBMS Module 5 — Interactive Virtual Lab</p>
+        </div>
+      </div>
+
+      <div class="app-gate-intro">
+        <h2>Sign in to continue</h2>
+        <p>
+          This virtual lab keeps your simulation runs, quiz scores and leaderboard
+          position in a personal account, so an account is required before you enter.
+        </p>
+      </div>
+
+      <div id="auth-gate-form" class="auth-surface"></div>
+
+      <ul class="app-gate-features">
+        <li><i class="fas fa-flask"></i> Run 2PL simulations and watch the locks move</li>
+        <li><i class="fas fa-brain"></i> Practise 150 questions across three difficulty levels</li>
+        <li><i class="fas fa-graduation-cap"></i> Sit verified GATE CSE &amp; UGC NET questions</li>
+        <li><i class="fas fa-trophy"></i> Compete on the leaderboard with your classmates</li>
+      </ul>
+    </div>
+  </div>
+
+  <div id="app-shell">
   <!-- ═══════════════ NAVIGATION BAR ═══════════════ -->
   <nav id="main-nav">
     <div class="nav-brand">
@@ -23,13 +55,20 @@
     <div class="nav-links" id="nav-links">
       <a href="#" class="nav-link active" data-section="simulator"><i class="fas fa-home"></i> Simulator</a>
       <a href="#" class="nav-link" data-section="learn"><i class="fas fa-book"></i> Learn</a>
+      <a href="#" class="nav-link" data-section="quiz"><i class="fas fa-brain"></i> Quiz</a>
+      <a href="#" class="nav-link" data-section="exams"><i class="fas fa-graduation-cap"></i> <span class="nav-label-full">Competitive Exams</span><span class="nav-label-short">Exams</span></a>
+      <a href="#" class="nav-link" data-section="leaderboard"><i class="fas fa-trophy"></i> Leaderboard</a>
+      <a href="#" class="nav-link" data-section="history"><i class="fas fa-clock-rotate-left"></i> History</a>
+      <a href="#" class="nav-link" data-section="analytics"><i class="fas fa-chart-bar"></i> Analytics</a>
       <a href="#" class="nav-link" data-section="help"><i class="fas fa-circle-question"></i> Help</a>
       <a href="#" class="nav-link" data-section="download"><i class="fas fa-download"></i> Download</a>
-      <a href="#" class="nav-link" data-section="analytics"><i class="fas fa-chart-bar"></i> Analytics</a>
-      <a href="#" class="nav-link" data-section="developed-by"><i class="fas fa-code"></i> Developed By</a>
+      <a href="#" class="nav-link" data-section="developed-by"><i class="fas fa-code"></i> <span class="nav-label-full">Developed By</span><span class="nav-label-short">Team</span></a>
     </div>
     
     <div class="nav-right">
+      <button id="auth-nav-button" class="btn btn-outline auth-nav-button" aria-label="Sign in or manage your account">
+        <i class="fas fa-right-to-bracket"></i> Sign in
+      </button>
       <button id="theme-toggle" class="btn btn-outline btn-icon" aria-label="Toggle theme">
         <i class="fas fa-moon"></i>
       </button>
@@ -71,7 +110,7 @@
 
         <!-- Transaction Editor -->
         <div class="input-group">
-          <label for="transaction-editor">Transactions <span class="hint">(R=Read, W=Write, C=Commit)</span></label>
+          <label for="transaction-editor">Transactions <span class="hint">(R=Read, W=Write, U=Unlock, C=Commit)</span></label>
           <textarea id="transaction-editor" rows="6" placeholder="T1: R(A), W(B), C&#10;T2: R(A), R(B), W(A), C"></textarea>
         </div>
 
@@ -129,13 +168,17 @@
 
         <!-- Visualization Tabs -->
         <div class="viz-tabs">
-          <button id="tab-lock-table" class="tab-btn tab-active"><i class="fas fa-table"></i> Lock Table</button>
+          <button id="tab-transactions" class="tab-btn tab-active"><i class="fas fa-columns"></i> Transactions</button>
+          <button id="tab-lock-table" class="tab-btn"><i class="fas fa-table"></i> Lock Table</button>
           <button id="tab-wait-graph" class="tab-btn"><i class="fas fa-diagram-project"></i> Wait-For Graph</button>
           <button id="tab-timeline" class="tab-btn"><i class="fas fa-timeline"></i> Timeline</button>
         </div>
 
         <!-- Tab Panels -->
-        <div id="viz-lock-table" class="tab-panel tab-panel-active">
+        <div id="viz-transactions" class="tab-panel tab-panel-active">
+          <div id="transaction-columns-viz" class="viz-container viz-container-tx"></div>
+        </div>
+        <div id="viz-lock-table" class="tab-panel">
           <div id="lock-table-viz" class="viz-container"></div>
         </div>
         <div id="viz-wait-graph" class="tab-panel">
@@ -237,6 +280,50 @@
         <p class="section-subtitle">Simulation statistics and usage insights</p>
       </div>
       <div id="analytics-content"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ SECTION: QUIZ ═══════════════ -->
+  <div id="section-quiz" class="page-section">
+    <div class="content-container">
+      <div class="section-header">
+        <h2><i class="fas fa-brain"></i> Quiz</h2>
+        <p class="section-subtitle">Difficulty-based practice on locking protocols and concurrency control</p>
+      </div>
+      <div id="quiz-content"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ SECTION: COMPETITIVE EXAMS ═══════════════ -->
+  <div id="section-exams" class="page-section">
+    <div class="content-container">
+      <div class="section-header">
+        <h2><i class="fas fa-graduation-cap"></i> Competitive Exams</h2>
+        <p class="section-subtitle">Practice DBMS locking and concurrency-control questions from GATE CSE and UGC NET Computer Science</p>
+      </div>
+      <div id="exams-content"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ SECTION: LEADERBOARD ═══════════════ -->
+  <div id="section-leaderboard" class="page-section">
+    <div class="content-container">
+      <div class="section-header">
+        <h2><i class="fas fa-trophy"></i> Leaderboard</h2>
+        <p class="section-subtitle">Real rankings computed from the quiz attempts stored in the database</p>
+      </div>
+      <div id="leaderboard-content"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ SECTION: HISTORY ═══════════════ -->
+  <div id="section-history" class="page-section">
+    <div class="content-container">
+      <div class="section-header">
+        <h2><i class="fas fa-clock-rotate-left"></i> History</h2>
+        <p class="section-subtitle">Your simulation runs and your completed quiz attempts</p>
+      </div>
+      <div id="history-content"></div>
     </div>
   </div>
 
@@ -369,11 +456,13 @@
   <footer>
     <p>Locking Protocol Animation — DBMS Virtual Lab | Module 5</p>
   </footer>
+  </div><!-- /#app-shell -->
 
   <!-- ═══════════════ SCRIPTS ═══════════════ -->
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
+  <script src="js/utils.js"></script>
   <script src="js/simulator.js"></script>
   <script src="js/examples.js"></script>
   <script src="js/history.js"></script>
@@ -386,6 +475,11 @@
   <script src="js/chatbot.js"></script>
   <script src="js/speech.js"></script>
   <script src="js/analytics.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/quiz.js"></script>
+  <script src="js/exam.js"></script>
+  <script src="js/leaderboard.js"></script>
+  <script src="js/history-section.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

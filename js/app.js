@@ -19,7 +19,7 @@ class App {
 
   /* ───────────────────────── Initialization ───────────────────────── */
 
-  init() {
+  async init() {
     // Instantiate dependencies
     this.visualizer = window.LockVisualizer ? new window.LockVisualizer() : null;
     this.explainer  = window.StepExplainer  ? new window.StepExplainer()  : null;
@@ -46,10 +46,33 @@ class App {
     this.setupEventListeners();
     this.populateExamples();
     this.loadTheory();
-    this.loadHistory();
+
+    // Signing in is compulsory: the whole application stays behind the
+    // sign-in gate until the session has been checked.
+    if (window.AuthManager) {
+      this.authManager = new window.AuthManager();
+      window.authManager = this.authManager;
+      await this.authManager.init();
+    }
+
+    if (this.authManager && this.authManager.user) {
+      this.loadHistory();
+    }
 
     if (this.explainer) {
       this.explainer.showValidation('Welcome! Select an example or type your own transactions to begin.', 'info');
+    }
+  }
+
+  /** Called by the auth manager once a user signs in. */
+  onUserSignedIn(user) {
+    if (!user) return;
+    // The history manager may have fallen back to localStorage while the
+    // session was not established yet — reload it from the database now.
+    if (this.historyManager) this.historyManager.useAPI = true;
+    this.loadHistory();
+    if (this.explainer) {
+      this.explainer.showValidation(`Welcome, ${user.displayName || user.username}!`, 'success');
     }
   }
 
@@ -58,6 +81,11 @@ class App {
   setupEventListeners() {
     // Theme
     document.getElementById('theme-toggle')?.addEventListener('click', () => this.toggleTheme());
+
+    // Account button (the session is compulsory, so this opens the profile)
+    document.getElementById('auth-nav-button')?.addEventListener('click', () => {
+      if (this.authManager) this.authManager.openModal();
+    });
 
     // Example & Protocol selectors
     document.getElementById('example-select')?.addEventListener('change', (e) => {
@@ -69,6 +97,15 @@ class App {
     document.getElementById('custom-schedule-toggle')?.addEventListener('change', (e) => {
       const el = document.getElementById('custom-schedule-editor');
       if (el) el.style.display = e.target.checked ? 'block' : 'none';
+      this.resetSimulation(true);
+    });
+
+    // Reset simulator state when user types custom transactions so 'Step' picks it up immediately
+    document.getElementById('transaction-editor')?.addEventListener('input', () => {
+      if (this.simulator) this.resetSimulation(true);
+    });
+    document.getElementById('custom-schedule-editor')?.addEventListener('input', () => {
+      if (this.simulator) this.resetSimulation(true);
     });
 
     // Simulation controls
@@ -105,7 +142,7 @@ class App {
   }
 
   setupTabs() {
-    const tabs = ['lock-table', 'wait-graph', 'timeline'];
+    const tabs = ['transactions', 'lock-table', 'wait-graph', 'timeline'];
     tabs.forEach(tab => {
       document.getElementById(`tab-${tab}`)?.addEventListener('click', () => {
         // Deactivate all
@@ -127,9 +164,11 @@ class App {
       });
     });
 
-    // Initialize: only first tab visible
-    document.getElementById('viz-wait-graph') && (document.getElementById('viz-wait-graph').style.display = 'none');
-    document.getElementById('viz-timeline') && (document.getElementById('viz-timeline').style.display = 'none');
+    // Initialize: only the first tab (Transactions) visible
+    ['lock-table', 'wait-graph', 'timeline'].forEach(t => {
+      const panel = document.getElementById(`viz-${t}`);
+      if (panel) panel.style.display = 'none';
+    });
   }
 
   /* ──────────────────────────── Theme ─────────────────────────────── */
@@ -253,6 +292,7 @@ class App {
       if (!txMap[op.txId]) txMap[op.txId] = [];
       if (op.type === 'read') txMap[op.txId].push(`R(${op.item})`);
       else if (op.type === 'write') txMap[op.txId].push(`W(${op.item})`);
+      else if (op.type === 'unlock') txMap[op.txId].push(`U(${op.item})`);
       else if (op.type === 'commit') txMap[op.txId].push('C');
       else if (op.type === 'abort') txMap[op.txId].push('A');
     });
@@ -268,6 +308,7 @@ class App {
     const customText = example.schedule.map(op => {
       if (op.type === 'read') return `${op.txId}:R(${op.item})`;
       if (op.type === 'write') return `${op.txId}:W(${op.item})`;
+      if (op.type === 'unlock') return `${op.txId}:U(${op.item})`;
       if (op.type === 'commit') return `${op.txId}:C`;
       if (op.type === 'abort') return `${op.txId}:A`;
       return '';
@@ -371,6 +412,9 @@ class App {
     const writeMatch = opStr.match(/^W\((\w+)\)$/);
     if (writeMatch) return { txId, type: 'write', item: writeMatch[1] };
 
+    const unlockMatch = opStr.match(/^U\((\w+)\)$/);
+    if (unlockMatch) return { txId, type: 'unlock', item: unlockMatch[1] };
+
     return null;
   }
 
@@ -412,7 +456,8 @@ class App {
           
           const readMatch = o.match(/^R\((.*)\)$/);
           const writeMatch = o.match(/^W\((.*)\)$/);
-          
+          const unlockMatch = o.match(/^U\((.*)\)$/);
+
           if (readMatch) {
             if (!readMatch[1] || !readMatch[1].trim()) {
               errors.push(`❌ Invalid syntax in ${txPart}: "${op.trim()}" — data item name is required. Use R(A), R(B), etc.`);
@@ -421,8 +466,12 @@ class App {
             if (!writeMatch[1] || !writeMatch[1].trim()) {
               errors.push(`❌ Invalid syntax in ${txPart}: "${op.trim()}" — data item name is required. Use W(A), W(B), etc.`);
             }
+          } else if (unlockMatch) {
+            if (!unlockMatch[1] || !unlockMatch[1].trim()) {
+              errors.push(`❌ Invalid syntax in ${txPart}: "${op.trim()}" — data item name is required. Use U(A), U(B), etc.`);
+            }
           } else {
-            errors.push(`❌ Invalid operation in ${txPart}: "${op.trim()}". Valid operations: R(item), W(item), C, A`);
+            errors.push(`❌ Invalid operation in ${txPart}: "${op.trim()}". Valid operations: R(item), W(item), U(item), C, A`);
           }
         }
       }
@@ -486,7 +535,18 @@ class App {
     
     // Set state to aborted
     sim.transactionStates[txIdToAbort] = 'aborted';
-    
+
+    // Mark every operation of the aborted transaction so that the
+    // transaction-column view reflects the abort immediately.
+    const abortedOps = sim.txOperations[txIdToAbort] || [];
+    abortedOps.forEach(op => {
+      const record = sim.opStatus[op.opId];
+      if (record) {
+        record.status = 'aborted';
+        record.stepNumber = this.currentSteps.length + 1;
+      }
+    });
+
     // Release all locks
     sim._releaseLocks(txIdToAbort, 'all');
     
@@ -508,7 +568,7 @@ class App {
     // Create a step result for this resolution
     const resolutionStep = {
       stepNumber: this.currentSteps.length + 1,
-      operation: { txId: txIdToAbort, type: 'abort', item: null },
+      operation: { txId: txIdToAbort, type: 'abort', item: null, opId: null },
       lockRequested: null,
       result: 'aborted',
       explanation: `⚡ Deadlock Resolution: ${txIdToAbort} was aborted to resolve the deadlock. All locks held by ${txIdToAbort} have been released. Waiting transactions may now proceed.`,
@@ -711,6 +771,18 @@ class App {
     // Lock Table
     this.visualizer.renderLockTable(lastStep.lockTable || {});
 
+    // Transaction columns (one column per transaction: T1 | T2 | T3 ...)
+    // The live simulator state is used so that the columns always match the
+    // step that is currently displayed.
+    this.visualizer.renderTransactionColumns({
+      txOperations: (this.simulator && this.simulator.txOperations) || lastStep.txOperations || {},
+      opStatus: (this.simulator && this.simulator.opStatus) || lastStep.opStatus || {},
+      transactionStates: lastStep.transactionStates || {},
+      lockTable: lastStep.lockTable || {},
+      deadlockedTxns: lastStep.deadlockedTxns || [],
+      currentOpId: lastStep.operation?.opId || null
+    });
+
     // Wait-For Graph
     this.visualizer.renderWaitForGraph(
       lastStep.waitForGraph || {},
@@ -841,6 +913,7 @@ class App {
         if (!txMap[op.txId]) txMap[op.txId] = [];
         if (op.type === 'read') txMap[op.txId].push(`R(${op.item})`);
         else if (op.type === 'write') txMap[op.txId].push(`W(${op.item})`);
+        else if (op.type === 'unlock') txMap[op.txId].push(`U(${op.item})`);
         else if (op.type === 'commit') txMap[op.txId].push('C');
         else if (op.type === 'abort') txMap[op.txId].push('A');
       });
@@ -911,7 +984,7 @@ class App {
 
 window.App = App;
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   window.app = new App();
-  window.app.init();
+  await window.app.init();
 });
