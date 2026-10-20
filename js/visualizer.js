@@ -6,6 +6,30 @@ class LockVisualizer {
     this.txColumnsContainerId = '#transaction-columns-viz';
   }
 
+  /** CSS class suffix used for a lock mode badge. */
+  static lockModeClass(mode) {
+    switch (mode) {
+      case 'X': return 'x';
+      case 'U': return 'u';
+      case 'IS': return 'is';
+      case 'IX': return 'ix';
+      case 'SIX': return 'six';
+      default: return 's';
+    }
+  }
+
+  /** Colour used for a lock mode in the lock table. */
+  static lockModeColor(mode) {
+    switch (mode) {
+      case 'X': return '#FF9800';
+      case 'U': return '#9C27B0';
+      case 'IS': return '#4CAF50';
+      case 'IX': return '#FF9800';
+      case 'SIX': return '#E91E63';
+      default: return '#4CAF50';
+    }
+  }
+
   /* ═══════════════════════════════════════════════════════════════
    * TRANSACTION COLUMNS  (T1 | T2 | T3 ... one column per transaction)
    * Renders the live execution state of every transaction so that each
@@ -68,7 +92,7 @@ class LockVisualizer {
       if (held.length > 0) {
         held.forEach(lock => {
           locksRow.append('span')
-            .attr('class', `tx-lock-badge tx-lock-${lock.lockType === 'X' ? 'x' : 's'}`)
+            .attr('class', `tx-lock-badge tx-lock-${LockVisualizer.lockModeClass(lock.lockType)}`)
             .text(`${lock.lockType}(${lock.item})`);
         });
       } else {
@@ -102,7 +126,7 @@ class LockVisualizer {
           const released = !stillHeld && (status === 'granted' || status === 'unblocked' || status === 'released' || status === 'committed' || status === 'aborted');
 
           const badge = meta.append('span')
-            .attr('class', `tx-lock-badge${released ? ' tx-lock-released' : ''} tx-lock-${effectiveType === 'X' ? 'x' : 's'}`);
+            .attr('class', `tx-lock-badge${released ? ' tx-lock-released' : ''} tx-lock-${LockVisualizer.lockModeClass(effectiveType)}`);
           badge.text(record.upgraded ? 'S→X' : record.lockType);
           if (record.upgraded) badge.attr('title', 'Lock upgraded from Shared to Exclusive');
           if (released) badge.attr('title', 'Lock has been released');
@@ -251,7 +275,7 @@ class LockVisualizer {
         .attr('x', width * (colWidths[0] + colWidths[1]) + 10)
         .attr('y', rowHeight / 2 + 5)
         .text(typeStr || '-')
-        .style('fill', typeStr.includes('X') ? '#FF9800' : '#4CAF50');
+        .style('fill', LockVisualizer.lockModeColor(typeStr.split(',')[0].trim()));
 
       // Waiting Queue
       let queueStr = rowData.queue.map(q => `${q.txId}(${q.lockType})`).join(', ');
@@ -453,6 +477,8 @@ class LockVisualizer {
         case 'deadlock': return '#f44336';
         case 'released': return '#9e9e9e';
         case 'committed': return '#2196F3';
+        case 'restarted': return '#9C27B0';
+        case 'aborted': return '#f44336';
         default: return '#607d8b';
       }
     };

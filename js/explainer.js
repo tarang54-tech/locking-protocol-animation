@@ -23,6 +23,7 @@ class StepExplainer {
       case 'released':  icon = '🔓'; className += ' step-released';  break;
       case 'committed': icon = '✔️'; className += ' step-committed'; break;
       case 'aborted':   icon = '❌'; className += ' step-deadlock';  break;
+      case 'restarted': icon = '♻️'; className += ' step-restarted'; break;
       case 'buffered':  icon = '📦'; className += ' step-waiting';   break;
       case 'ignored':   icon = '⏭️'; className += ' step-released';  break;
     }

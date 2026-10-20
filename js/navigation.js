@@ -9,8 +9,8 @@ class Navigation {
   }
 
   init() {
-    // Set up nav link click handlers
-    document.querySelectorAll('.nav-link[data-section]').forEach(link => {
+    // Set up nav link click handlers (the brand link is handled here as well)
+    document.querySelectorAll('[data-section]').forEach(link => {
       link.addEventListener('click', (e) => {
         e.preventDefault();
         const section = link.getAttribute('data-section');
@@ -24,7 +24,7 @@ class Navigation {
     });
 
     // Close mobile menu when a link is clicked
-    document.querySelectorAll('.nav-link').forEach(link => {
+    document.querySelectorAll('.nav-link, .nav-brand').forEach(link => {
       link.addEventListener('click', () => {
         document.getElementById('nav-links')?.classList.remove('nav-open');
       });

@@ -1,4 +1,4 @@
-# Locking Protocol Animation — DBMS Virtual Lab
+# Locking Protocol Simulator - DBMS Virtual Lab
 
 ## Project Overview
 Project 51 | DBMS Module 5 | Difficulty: Medium
@@ -14,16 +14,20 @@ database-backed leaderboard.
 
 ### Simulator
 - 3-panel dashboard (Configuration, Visualisation, Explanation)
-- Two-Phase Locking simulation (Basic, Strict, Rigorous)
+- **Nine locking protocols** in three families, each with its real rules implemented
+  in the engine (see *Locking protocols* below)
 - **Transaction columns** — every transaction (T1, T2, T3 …) is displayed in its own
   labelled column with its operations stacked vertically and synchronised with the
   lock table, the wait-for graph and the execution timeline
 - Live operation states: pending, completed, waiting, blocked (deadlock), committed,
-  aborted, lock released, buffered and ignored
-- Shared / exclusive lock badges, `S → X` upgrade markers and live "locks held" summaries
+  aborted, restarted, lock released, buffered and ignored
+- Shared / exclusive / update / intention lock badges, `S → X` upgrade markers and
+  live "locks held" summaries
 - D3.js animated visualisations (Lock Table, Wait-For Graph, Timeline)
 - Deadlock detection with cycle highlighting and deadlock resolution (abort a victim)
-- 6 pre-built examples, custom schedules, Step / Back / Run All / Auto Play / Reset
+- 12 pre-built examples, custom schedules, Step / Back / Run All / Auto Play / Reset
+- Protocol selector with grouped families and a live explanation of the selected
+  protocol's rules
 - Export to JSON and enhanced PDF reports
 - Simulation history stored in SQLite
 - Analytics dashboard with D3.js charts
@@ -202,6 +206,74 @@ nothing in the application can be used before signing in.
 3. If the front end is served from another host, add that origin to `ALLOWED_ORIGINS`.
 4. Make sure the server is behind HTTPS (a reverse proxy such as nginx, Caddy,
    Cloudflare or the platform's own TLS terminator is enough).
+
+---
+
+## Locking protocols
+
+The protocol selector is grouped into three families. Every protocol implements
+its own rules in the engine (`js/simulator.js`) — the rules shown in the panel
+under the selector are the rules the engine actually applies.
+
+### Two-Phase Locking Variants
+
+| Protocol | What the engine does |
+|---|---|
+| **Basic 2PL** | A lock may be taken until the first release, never afterwards. Acquiring a lock in the shrinking phase aborts the transaction. |
+| **Strict 2PL** | Basic 2PL, plus: an exclusive lock is held until commit/abort. Releasing an X-lock early aborts the transaction. |
+| **Rigorous 2PL** | Basic 2PL, plus: *every* lock (S and X) is held until commit/abort. The commit order is a valid serial order. |
+| **Conservative / Static 2PL** | The complete lock set is computed from the schedule and taken **all at once** before the transaction starts. If one lock cannot be granted the transaction waits **holding nothing at all**, so the hold-and-wait condition is removed and deadlocks cannot occur. |
+
+### Locking Modes & Granularity
+
+| Protocol | What the engine does |
+|---|---|
+| **Shared & Exclusive (S/X) with conversions** | The two fundamental lock modes without the two-phase rule. A write on an item the transaction has read performs an **S → X upgrade** (it waits if a conflict exists); a read on an item it has written performs an **X → S downgrade** (always granted). Because there is no two-phase rule, a lock may be released early and new locks may still be taken — the schedule is then *not* guaranteed to be serializable, which is exactly the point of the comparison with Basic 2PL. |
+| **Update locking (U-lock)** | A read takes an **update lock**, which is compatible with a shared lock only. The write converts the U-lock into an X-lock. Two transactions can therefore no longer both read an item and then deadlock while upgrading. |
+| **Multiple granularity locking (IS / IX / SIX)** | Items are hierarchical paths such as `db.accounts.p2.r7`. A lock on a node is taken together with **intention locks on its ancestors** (IS for shared access, IX for exclusive access, SIX when the transaction holds both below the node). A lock on a node conflicts with every lock on that node, with the locks below it and with the strong locks above it. |
+
+### Deadlock Prevention Policies
+
+These are **prevention policies used together with locking**, not separate
+two-phase locking protocols — the two-phase rules of Basic 2PL still apply.
+
+| Policy | Rule | Engine behaviour |
+|---|---|---|
+| **Wait-Die** | Older waits, younger dies. | The requester is older than the holder → it waits. The requester is younger → it is **aborted and restarted** at the end of the schedule with a new timestamp. |
+| **Wound-Wait** | Older wounds, younger waits. | The requester is older → it **wounds** the holder, which is aborted and restarted, and the requester proceeds. The requester is younger → it waits. |
+
+A transaction that keeps losing is given up after three restarts, which is the
+starvation problem the prevention policies are known for.
+
+### Examples
+
+Twelve ready-made scenarios are included (examples 7 – 12 demonstrate the new
+protocols):
+
+1. Basic 2PL — No Conflict
+2. Shared Lock Compatibility
+3. Lock Conflict & Waiting
+4. Lock Upgrade Conflict
+5. Deadlock Scenario
+6. Rigorous 2PL Demo
+7. **Conservative 2PL — Deadlock Prevented** (the classic circular wait simply runs)
+8. **Multiple Granularity Locking** (database → table → record)
+9. **Update Locks — Read-then-Write** (the upgrade deadlock disappears)
+10. **Lock Conversion — S → X Upgrade** (the conversion has to wait)
+11. **Wait-Die — the Younger Transaction Dies**
+12. **Wound-Wait — the Older Transaction Wounds**
+
+### Not implemented: tree protocol locking
+
+The tree protocol is deliberately **not** offered as a selector entry. It needs
+a different interaction model: the user must lock every ancestor explicitly in
+IS or IX mode *before* a child can be locked, and a transaction that holds an
+X-lock on a node may never lock a descendant. The current operation set
+(`R(item)`, `W(item)`, `U(item)`, `C`, `A`) has no way to express an explicit
+`IX(parent)` request, so the protocol could only have been faked with
+multiple-granularity behaviour — which would have been misleading. The
+multiple granularity protocol above implements the intention-lock rules
+correctly instead.
 
 ---
 
@@ -456,6 +528,7 @@ Three suites run with the Node.js built-in test runner:
 | Suite | What it covers |
 |---|---|
 | `tests/simulator-tx-columns.test.js` | Operation identity, per-transaction tracking, waiting / unblocked / deadlock / upgrade states, step-back restoration, protocol violations |
+| `tests/protocols.test.js` | The protocol catalogue and every protocol's rules: conservative 2PL (all-or-nothing locks, no deadlock, locks held until the end), S/X conversions (upgrade waits, downgrade granted), update locks (U-lock, U → X, no upgrade deadlock), multiple granularity (intention locks on the ancestors, descendant and ancestor conflicts, SIX locks), Wait-Die and Wound-Wait (who waits, who dies, who is restarted) and the unchanged behaviour of the original three protocols |
 | `tests/question-bank.test.js` | Dataset integrity: option counts, unique ids, answer keys, at least 50 questions per level, difficulty matches the level (never the topic), every topic present in several levels, provenance of previous-year vs practice questions |
 | `tests/api.test.js` | End-to-end HTTP tests: registration, validation, login/logout, session persistence, every endpoint rejecting an unauthenticated request, server-side scoring, client-supplied scores ignored, one answer per question, duplicate submission rejected, cross-user access rejected, attempt ownership, leaderboard ranking rules and tie-breakers, no private data leaked |
 
@@ -487,7 +560,8 @@ locking-protocol-animation/
 │   └── styles.css
 ├── js/
 │   ├── utils.js               (shared helpers)
-│   ├── simulator.js           (core 2PL engine + operation tracking)
+│   ├── protocols.js           (protocol catalogue + engine rules)
+│   ├── simulator.js           (core 2PL engine + protocol behaviour)
 │   ├── examples.js            (6 pre-built scenarios)
 │   ├── visualizer.js          (D3.js visualisations + transaction columns)
 │   ├── explainer.js           (step explanation cards)
@@ -507,6 +581,7 @@ locking-protocol-animation/
 │   └── history-section.js     (simulation + quiz history)
 └── tests/
     ├── simulator-tx-columns.test.js
+    ├── protocols.test.js
     ├── question-bank.test.js
     └── api.test.js
 ```
@@ -522,10 +597,14 @@ T2: R(A), R(B), W(A), C
 
 - `R(X)` = Read data item X
 - `W(X)` = Write data item X
-- `U(X)` = Unlock data item X (release the lock early — under Strict or Rigorous
-  2PL this is a protocol violation and the transaction is aborted)
+- `U(X)` = Unlock data item X (release the lock early)
 - `C` = Commit
 - `A` = Abort
+
+For the **multiple granularity** protocol the item name is a hierarchical path
+separated by dots, e.g. `R(db.accounts.p2.r7)`. The dots define the levels of
+the tree and the engine derives the ancestors, the intention locks and the
+descendant conflicts from them.
 
 ---
 

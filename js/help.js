@@ -6,7 +6,7 @@ class HelpSection {
     return `
       <div class="help-section">
         
-        <h2>How to Use the Locking Protocol Animation</h2>
+        <h2>How to Use the Locking Protocol Simulator</h2>
 
         <div class="help-card help-step">
           <div class="learn-card-header">

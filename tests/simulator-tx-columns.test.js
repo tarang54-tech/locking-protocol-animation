@@ -8,12 +8,15 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 
-// Load the browser script into a tiny sandbox so we can unit-test the engine.
+// Load the browser scripts into a tiny sandbox so we can unit-test the engine.
 function loadSimulator() {
-  const source = fs.readFileSync(path.join(__dirname, '..', 'js', 'simulator.js'), 'utf8');
-  const sandbox = { window: {}, console };
+  const sandbox = { console };
+  sandbox.window = sandbox;
   vm.createContext(sandbox);
-  vm.runInContext(source, sandbox);
+  ['js/protocols.js', 'js/simulator.js'].forEach(file => {
+    const source = fs.readFileSync(path.join(__dirname, '..', file), 'utf8');
+    vm.runInContext(source, sandbox);
+  });
   return sandbox.window.LockingSimulator;
 }
 

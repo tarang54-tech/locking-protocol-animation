@@ -44,6 +44,7 @@ class App {
 
     this.loadTheme();
     this.setupEventListeners();
+    this.populateProtocols();
     this.populateExamples();
     this.loadTheory();
 
@@ -87,11 +88,14 @@ class App {
       if (this.authManager) this.authManager.openModal();
     });
 
-    // Example & Protocol selectors
+    // Protocol & example selectors
     document.getElementById('example-select')?.addEventListener('change', (e) => {
       if (e.target.value !== '') this.loadExample(parseInt(e.target.value));
     });
-    document.getElementById('protocol-select')?.addEventListener('change', () => this.resetSimulation());
+    document.getElementById('protocol-select')?.addEventListener('change', () => {
+      this.renderProtocolInfo();
+      this.resetSimulation();
+    });
 
     // Custom schedule toggle
     document.getElementById('custom-schedule-toggle')?.addEventListener('change', (e) => {
@@ -258,6 +262,54 @@ class App {
     }).join('');
   }
 
+  /* ───────────────────────── Protocol catalogue ───────────────────── */
+
+  /**
+   * Fill the protocol selector with the grouped catalogue and show the
+   * rules of the selected protocol.
+   */
+  populateProtocols() {
+    const select = document.getElementById('protocol-select');
+    if (!select || !window.PROTOCOLS) return;
+
+    select.innerHTML = window.PROTOCOL_GROUPS.map(group => {
+      const protocols = window.PROTOCOLS.filter(protocol => protocol.group === group.id);
+      if (!protocols.length) return '';
+      const options = protocols.map(protocol =>
+        `<option value="${escapeHtml(protocol.id)}">${escapeHtml(protocol.label)}</option>`
+      ).join('');
+      return `<optgroup label="${escapeHtml(group.label)}">${options}</optgroup>`;
+    }).join('');
+
+    select.value = window.DEFAULT_PROTOCOL || 'basic-2pl';
+    this.renderProtocolInfo();
+  }
+
+  /** Show a short description and the rules of the selected protocol. */
+  renderProtocolInfo() {
+    const host = document.getElementById('protocol-info');
+    const select = document.getElementById('protocol-select');
+    if (!host || !select || !window.PROTOCOL_BY_ID) return;
+
+    const protocol = window.PROTOCOL_BY_ID[select.value];
+    if (!protocol) {
+      host.innerHTML = '';
+      return;
+    }
+
+    const group = window.PROTOCOL_GROUPS.find(g => g.id === protocol.group);
+
+    host.innerHTML = `
+      <div class="protocol-info-head">
+        <span class="protocol-info-family">${escapeHtml(group ? group.label : protocol.group)}</span>
+      </div>
+      <p class="protocol-info-summary">${escapeHtml(protocol.summary)}</p>
+      <ul class="protocol-info-rules">
+        ${protocol.rules.map(rule => `<li>${escapeHtml(rule)}</li>`).join('')}
+      </ul>
+      <p class="protocol-info-watch"><i class="fas fa-lightbulb"></i> ${escapeHtml(protocol.watch)}</p>`;
+  }
+
   /* ─────────────────────────── Examples ───────────────────────────── */
 
   populateExamples() {
@@ -284,7 +336,10 @@ class App {
 
     // Set protocol
     const protocolSelect = document.getElementById('protocol-select');
-    if (protocolSelect) protocolSelect.value = example.protocol;
+    if (protocolSelect) {
+      protocolSelect.value = example.protocol;
+      this.renderProtocolInfo();
+    }
 
     // Build text representation for the transaction editor
     const txMap = {};
@@ -351,7 +406,7 @@ class App {
       if (colonIdx === -1) continue;
 
       const txId = trimmed.substring(0, colonIdx).trim();
-      const opStr = trimmed.substring(colonIdx + 1).trim().toUpperCase();
+      const opStr = trimmed.substring(colonIdx + 1).trim();
 
       const op = this.parseOperation(txId, opStr);
       if (op) schedule.push(op);
@@ -379,7 +434,7 @@ class App {
 
       txOps[txId] = [];
       for (const opPart of opsStr.split(',')) {
-        const opStr = opPart.trim().toUpperCase();
+        const opStr = opPart.trim();
         if (!opStr) continue;
         const op = this.parseOperation(txId, opStr);
         if (op) txOps[txId].push(op);
@@ -403,17 +458,22 @@ class App {
   }
 
   parseOperation(txId, opStr) {
-    if (opStr === 'C') return { txId, type: 'commit', item: null };
-    if (opStr === 'A') return { txId, type: 'abort', item: null };
+    const raw = String(opStr || '').trim();
+    const upper = raw.toUpperCase();
 
-    const readMatch = opStr.match(/^R\((\w+)\)$/);
-    if (readMatch) return { txId, type: 'read', item: readMatch[1] };
+    if (upper === 'C') return { txId, type: 'commit', item: null };
+    if (upper === 'A') return { txId, type: 'abort', item: null };
 
-    const writeMatch = opStr.match(/^W\((\w+)\)$/);
-    if (writeMatch) return { txId, type: 'write', item: writeMatch[1] };
+    // Item names may be hierarchical paths (db.accounts.p2.r7) for the
+    // multiple granularity protocol, so the case of the name is preserved.
+    const readMatch = raw.match(/^R\(([^()]+)\)$/i);
+    if (readMatch) return { txId, type: 'read', item: readMatch[1].trim() };
 
-    const unlockMatch = opStr.match(/^U\((\w+)\)$/);
-    if (unlockMatch) return { txId, type: 'unlock', item: unlockMatch[1] };
+    const writeMatch = raw.match(/^W\(([^()]+)\)$/i);
+    if (writeMatch) return { txId, type: 'write', item: writeMatch[1].trim() };
+
+    const unlockMatch = raw.match(/^U\(([^()]+)\)$/i);
+    if (unlockMatch) return { txId, type: 'unlock', item: unlockMatch[1].trim() };
 
     return null;
   }

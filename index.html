@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Locking Protocol Animation | DBMS Virtual Lab</title>
+  <title>Locking Protocol Simulator | DBMS Virtual Lab</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔒</text></svg>">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link rel="stylesheet" href="css/styles.css">
@@ -17,8 +17,8 @@
       <div class="app-gate-brand">
         <span class="app-gate-logo"><i class="fas fa-lock"></i></span>
         <div>
-          <h1>Locking Protocol Animation</h1>
-          <p>DBMS Module 5 — Interactive Virtual Lab</p>
+          <h1>Locking Protocol Simulator</h1>
+          <p>DBMS Module 5 — Virtual Lab</p>
         </div>
       </div>
 
@@ -44,13 +44,10 @@
   <div id="app-shell">
   <!-- ═══════════════ NAVIGATION BAR ═══════════════ -->
   <nav id="main-nav">
-    <div class="nav-brand">
-      <i class="fas fa-lock"></i>
-      <div>
-        <h1>Locking Protocol Animation</h1>
-        <span class="subtitle">DBMS Module 5 — Interactive Visualization</span>
-      </div>
-    </div>
+    <a class="nav-brand" href="#" data-section="simulator" title="Locking Protocol Simulator — DBMS Module 5">
+      <span class="nav-brand-mark" aria-hidden="true"><i class="fas fa-lock"></i></span>
+      <h1><span class="brand-label-full">Locking Protocol Simulator</span><span class="brand-label-short">Locking Protocols</span></h1>
+    </a>
     
     <div class="nav-links" id="nav-links">
       <a href="#" class="nav-link active" data-section="simulator"><i class="fas fa-home"></i> Simulator</a>
@@ -93,11 +90,8 @@
         <!-- Protocol Selection -->
         <div class="input-group">
           <label for="protocol-select">Protocol Type</label>
-          <select id="protocol-select">
-            <option value="basic-2pl">Basic Two-Phase Locking</option>
-            <option value="strict-2pl">Strict Two-Phase Locking</option>
-            <option value="rigorous-2pl">Rigorous Two-Phase Locking</option>
-          </select>
+          <select id="protocol-select"></select>
+          <div id="protocol-info" class="protocol-info" role="status" aria-live="polite"></div>
         </div>
 
         <!-- Example Selection -->
@@ -226,7 +220,7 @@
   <div id="section-learn" class="page-section">
     <div class="content-container">
       <div class="section-header">
-        <h2><i class="fas fa-book"></i> Learn — Locking Protocol Animation</h2>
+        <h2><i class="fas fa-book"></i> Learn - Locking Protocol Simulator</h2>
         <p class="section-subtitle">Comprehensive guide to database locking and concurrency control</p>
       </div>
       <div id="learn-content"></div>
@@ -238,7 +232,7 @@
     <div class="content-container">
       <div class="section-header">
         <h2><i class="fas fa-circle-question"></i> Help — User Manual</h2>
-        <p class="section-subtitle">Step-by-step guide to using the Locking Protocol Animation</p>
+        <p class="section-subtitle">Step-by-step guide to using the Locking Protocol Simulator</p>
       </div>
       <div id="help-content"></div>
     </div>
@@ -454,7 +448,7 @@
 
   <!-- ═══════════════ FOOTER ═══════════════ -->
   <footer>
-    <p>Locking Protocol Animation — DBMS Virtual Lab | Module 5</p>
+    <p>Locking Protocol Simulator - DBMS Virtual Lab | Module 5</p>
   </footer>
   </div><!-- /#app-shell -->
 
@@ -463,6 +457,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
   <script src="js/utils.js"></script>
+  <script src="js/protocols.js"></script>
   <script src="js/simulator.js"></script>
   <script src="js/examples.js"></script>
   <script src="js/history.js"></script>
