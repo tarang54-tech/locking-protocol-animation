@@ -21,7 +21,7 @@ const { requireAuth, attachUser } = require('./auth');
 
 const DEFAULT_QUESTION_COUNT = 10;
 const MAX_QUESTION_COUNT = 30;      // difficulty quizzes (50 questions per level available)
-const MAX_EXAM_QUESTION_COUNT = 20; // competitive examinations (23 questions available)
+const MAX_EXAM_QUESTION_COUNT = 30; // competitive examinations (87 questions available)
 
 /* ───────────────────────── Helpers ───────────────────────── */
 

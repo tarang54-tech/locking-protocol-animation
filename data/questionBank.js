@@ -9,6 +9,7 @@
  *   data/questions/medium.js  — 50 questions whose intrinsic difficulty is medium
  *   data/questions/hard.js    — 50 questions whose intrinsic difficulty is hard
  *   data/examQuestions.js     — competitive-examination metadata and questions
+ *   data/examQuestionsExtra.js — later examination questions (verified + practice)
  *
  * IMPORTANT — how difficulty is decided:
  *   The Easy / Medium / Hard levels describe the intrinsic difficulty of the
@@ -32,7 +33,11 @@
 const easyQuestions = require('./questions/easy');
 const mediumQuestions = require('./questions/medium');
 const hardQuestions = require('./questions/hard');
-const { EXAMS, EXAM_QUESTIONS } = require('./examQuestions');
+const { EXAMS, EXAM_QUESTIONS: CORE_EXAM_QUESTIONS } = require('./examQuestions');
+const { EXTRA_EXAM_QUESTIONS } = require('./examQuestionsExtra');
+
+/* The competition bank is the original collection plus the later additions. */
+const EXAM_QUESTIONS = [...CORE_EXAM_QUESTIONS, ...EXTRA_EXAM_QUESTIONS];
 
 const QUIZZES = [
   {

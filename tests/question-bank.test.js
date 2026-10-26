@@ -157,3 +157,48 @@ test('practice questions never claim to be previous-year questions', () => {
     }
   });
 });
+
+test('the examination bank is large enough and names only real examinations', () => {
+  assert.ok(EXAM_QUESTIONS.length >= 80,
+    `the examination bank has ${EXAM_QUESTIONS.length} questions (expected at least 80)`);
+
+  EXAM_QUESTIONS.forEach(question => {
+    assert.ok(EXAMS.some(exam => exam.id === question.examId),
+      `${question.id} names an unknown examination`);
+    assert.ok(['easy', 'medium', 'hard'].includes(question.difficulty),
+      `${question.id} has an unknown difficulty`);
+  });
+});
+
+test('the examination bank covers the whole concurrency syllabus', () => {
+  const topics = new Set(EXAM_QUESTIONS.map(question => question.topic));
+  ['Lock Basics', 'Two-Phase Locking', 'Serializability', 'Deadlock',
+    'Multiple Granularity Locking', 'Concurrency Anomalies', 'Recoverability',
+    'Isolation Levels', 'Timestamp Ordering']
+    .forEach(topic => assert.ok(topics.has(topic), `missing examination topic: ${topic}`));
+});
+
+test('the point value of an examination question follows its difficulty', () => {
+  const points = { easy: 10, medium: 15, hard: 20 };
+  EXAM_QUESTIONS.forEach(question => {
+    assert.strictEqual(question.points, points[question.difficulty],
+      `${question.id} is ${question.difficulty} but is worth ${question.points} points`);
+  });
+});
+
+test('practice questions carry no session', () => {
+  EXAM_QUESTIONS
+    .filter(question => question.questionType === 'practice')
+    .forEach(question => assert.strictEqual(question.session, null,
+      `${question.id} must not claim an examination session`));
+});
+
+test('every examination offers both verified and practice questions', () => {
+  EXAMS.forEach(exam => {
+    const questions = EXAM_QUESTIONS.filter(question => question.examId === exam.id);
+    assert.ok(questions.some(question => question.questionType === 'previous_year'),
+      `${exam.id} has no verified previous-year question`);
+    assert.ok(questions.some(question => question.questionType === 'practice'),
+      `${exam.id} has no practice question`);
+  });
+});

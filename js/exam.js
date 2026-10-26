@@ -65,6 +65,8 @@ class ExamSection {
               <option value="10" selected>10</option>
               <option value="15">15</option>
               <option value="20">20</option>
+              <option value="25">25</option>
+              <option value="30">30</option>
             </select>
           </div>
           <button type="button" id="exam-start" class="btn btn-primary exam-start-btn">
@@ -191,9 +193,9 @@ class ExamSection {
       options.push({ value: 0, label: 'No questions available', disabled: true });
     } else if (available < 5) {
       options.push({ value: available, label: available === 1 ? '1 question' : `${available} questions`, disabled: false });
-      [5, 10, 15, 20].forEach(value => options.push({ value, label: `${value} questions`, disabled: true }));
+      [5, 10, 15, 20, 25, 30].forEach(value => options.push({ value, label: `${value} questions`, disabled: true }));
     } else {
-      [5, 10, 15, 20].forEach(value => {
+      [5, 10, 15, 20, 25, 30].forEach(value => {
         options.push({ value, label: `${value} questions`, disabled: value > available });
       });
     }

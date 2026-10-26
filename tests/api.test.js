@@ -525,6 +525,29 @@ test('the exam question catalogue respects every filter', async () => {
   assert.strictEqual(none.data.questions.length, 0);
 });
 
+test('an exam attempt can draw 30 questions and labels practice honestly', async () => {
+  const client = (await registerClient('exambig')).client;
+
+  const catalogue = await client.get('/api/exam-questions?exam=gate-cse&type=practice');
+  assert.strictEqual(catalogue.status, 200);
+  assert.ok(catalogue.data.questions.length >= 30,
+    'the practice catalogue must be large enough for a 30-question attempt');
+
+  const attempt = await startAttempt(client, {
+    examId: 'gate-cse',
+    count: 30,
+    questionType: 'practice'
+  });
+
+  assert.strictEqual(attempt.questions.length, 30);
+  attempt.questions.forEach(question => {
+    assert.strictEqual(question.questionType, 'practice');
+    assert.strictEqual(question.year, null);
+    assert.strictEqual(question.verification, 'unverified');
+    assert.strictEqual(question.label, 'Exam-Style Practice Question');
+  });
+});
+
 test('an exam attempt honours the year and type filters', async () => {
   const client = (await registerClient('examfilter')).client;
   const attempt = await startAttempt(client, {

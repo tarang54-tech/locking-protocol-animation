@@ -345,8 +345,10 @@ difficulty, and set `difficulty` accordingly.
 }
 ```
 
-`data/examQuestions.js` holds the competitive-examination metadata and its
-questions; `data/questionBank.js` only combines the files.
+`data/examQuestions.js` holds the original competitive-examination metadata and
+questions; `data/examQuestionsExtra.js` holds the later additions (five verified
+previous-year questions and the extended practice set). `data/questionBank.js`
+only combines the files.
 
 ---
 
@@ -366,7 +368,7 @@ The section mixes two clearly separated kinds of questions:
    labelled `Exam-Style Practice Question`, so they can never be mistaken for
    authentic paper questions.
 
-Currently verified previous-year questions (7 in total):
+Currently verified previous-year questions (12 in total):
 
 | Examination | Year | Topic |
 |---|---|---|
@@ -377,11 +379,27 @@ Currently verified previous-year questions (7 in total):
 | GATE CSE | 2024 Set 2 | Statements about the 2PL protocol (multiple correct) |
 | UGC NET CS | June 2023 Paper II | 2PL vs timestamp ordering |
 | UGC NET CS | December 2014 Paper III | Pessimistic vs optimistic concurrency control |
+| GATE CSE | 2014 Set 1 | Which of four schedules is conflict serializable |
+| GATE CSE | 2012 | Non-serial interleavings of two read-write transactions |
+| GATE CSE | 2016 Set 2 | Ordering a precedence graph to obtain a serial schedule |
+| GATE CSE | 2026 Set 2 | Why read-read operations do not conflict |
+| UGC NET CS | June 2025 Paper II | Conflict vs view serializability statements |
+
+The collection currently holds **87 examination questions** — 12 verified
+previous-year questions and 75 clearly labelled exam-style practice questions —
+covering lock-based protocols, serializability and precedence graphs, deadlock
+prevention and detection, recoverability, isolation levels and timestamp
+ordering. The practice questions were written for this platform; they carry no
+year, session or source link.
 
 **No previous-year question, year, answer key or source URL in this project has been
 invented.** If a source cannot be traced, the question stays in the practice
 collection. The dataset is curated and stored locally — the application never
 scrapes a third-party site at runtime.
+
+An exam attempt draws between **5 and 30** questions, chosen from the filtered
+catalogue; the question-count selector only offers sizes the current filters can
+actually supply.
 
 ### Adding an examination question
 
