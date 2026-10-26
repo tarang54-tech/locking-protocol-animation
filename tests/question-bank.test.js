@@ -50,11 +50,17 @@ test('every difficulty quiz is described and has a full question bank', () => {
   });
 });
 
-test('every difficulty level has at least 50 questions', () => {
+test('every difficulty level meets or exceeds the target distribution (75 easy, 100 medium, 75 hard)', () => {
+  const targets = { easy: 75, medium: 100, hard: 75 };
   QUIZZES.forEach(quiz => {
     const count = QUESTIONS.filter(q => q.quizId === quiz.id).length;
-    assert.ok(count >= 50, `${quiz.id} has ${count} questions (expected at least 50)`);
+    assert.ok(count >= targets[quiz.id], `${quiz.id} has ${count} questions (expected at least ${targets[quiz.id]})`);
   });
+});
+
+test('total distinct questions in the bank exceeds 300', () => {
+  const allIds = new Set([...QUESTIONS, ...EXAM_QUESTIONS].map(q => q.id));
+  assert.ok(allIds.size >= 300, `total unique questions is ${allIds.size} (expected at least 300)`);
 });
 
 test('the difficulty level is a property of the question, not of its topic', () => {

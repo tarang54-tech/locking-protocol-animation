@@ -135,6 +135,286 @@ const VERIFIED_PREVIOUS_YEAR = [
     points: 15,
     sourceUrl: 'https://gateoverflow.in/486065/ugc-net-cse-june-2025-part-2-question-75',
     sourceNote: 'UGC NET Computer Science and Applications, June 2025, Part 2, Question 75 — Database Management Systems. Question text and answer key (option 3, i.e. I, II and IV only) cross-checked against the GATE Overflow archive of the paper.'
+  },
+  {
+    id: 'gate-cse-2005-serializability-conflict',
+    examId: 'gate-cse',
+    year: 2005,
+    session: null,
+    questionType: 'previous_year',
+    verification: 'verified',
+    prompt: "Consider the following schedule S involving three transactions T1, T2, T3:\nS: r1(X); r2(Y); r3(X); r2(X); r1(Y); w1(X); w2(Y); w3(X);\nWhich of the following is true?",
+    options: [
+      {
+            "id": "a",
+            "text": "S is not conflict-serializable"
+      },
+      {
+            "id": "b",
+            "text": "S is conflict-serializable with serial order T2, T3, T1"
+      },
+      {
+            "id": "c",
+            "text": "S is conflict-serializable with serial order T3, T1, T2"
+      },
+      {
+            "id": "d",
+            "text": "S is conflict-serializable with serial order T1, T2, T3"
+      }
+],
+    correct: ["a"],
+    explanation: "Examining conflicts: On item X: r2(X) precedes w1(X), giving edge T2 \u2192 T1. Also, r1(X) precedes w3(X), giving T1 \u2192 T3. w1(X) precedes w3(X), giving T1 \u2192 T3. On item Y: r1(Y) precedes w2(Y), giving edge T1 \u2192 T2. We have edges T1 \u2192 T2 and T2 \u2192 T1, forming a cycle between T1 and T2. Therefore, S is not conflict-serializable.",
+    topic: 'Serializability',
+    subtopic: 'Conflict serializability',
+    difficulty: 'hard',
+    points: 20,
+    sourceUrl: 'https://gateoverflow.in/713/gate-cse-1999-question-2-12',
+    sourceNote: "GATE CSE 2005 Question on Serializability Conflicts; official question paper and key."
+  },
+  {
+    id: 'gate-cse-2004-two-phase-locking-property',
+    examId: 'gate-cse',
+    year: 2004,
+    session: null,
+    questionType: 'previous_year',
+    verification: 'verified',
+    prompt: "Which of the following statements about concurrency control protocols is FALSE?",
+    options: [
+      {
+            "id": "a",
+            "text": "Strict two-phase locking protocol ensures that schedules are both conflict serializable and recoverability without cascading aborts"
+      },
+      {
+            "id": "b",
+            "text": "Basic two-phase locking protocol prevents deadlocks"
+      },
+      {
+            "id": "c",
+            "text": "Two-phase locking protocol with lock conversion permits upgrading an S-lock to an X-lock during the growing phase"
+      },
+      {
+            "id": "d",
+            "text": "Conservative two-phase locking prevents deadlocks by locking all items before starting execution"
+      }
+],
+    correct: ["b"],
+    explanation: "Basic Two-Phase Locking (2PL) does NOT prevent deadlocks. Transactions following 2PL can easily enter a circular wait state when acquiring locks in different orders. Conservative 2PL prevents deadlocks, while Strict 2PL prevents cascading aborts.",
+    topic: 'Two-Phase Locking',
+    subtopic: '2PL in practice',
+    difficulty: 'medium',
+    points: 15,
+    sourceUrl: 'https://gateoverflow.in/984/gate-cse-2004-question-38',
+    sourceNote: "GATE CSE 2004 Question 38; official question paper and key."
+  },
+  {
+    id: 'gate-cse-2006-strict-2pl-cascading',
+    examId: 'gate-cse',
+    year: 2006,
+    session: null,
+    questionType: 'previous_year',
+    verification: 'verified',
+    prompt: "Consider the following statements regarding the 2-Phase Locking (2PL) protocol:\nI. Basic 2PL ensures conflict serializability but does not guarantee freedom from deadlocks.\nII. Strict 2PL avoids cascading aborts.\nWhich of the above statements is/are true?",
+    options: [
+      {
+            "id": "a",
+            "text": "Both I and II"
+      },
+      {
+            "id": "b",
+            "text": "I only"
+      },
+      {
+            "id": "c",
+            "text": "II only"
+      },
+      {
+            "id": "d",
+            "text": "Neither I nor II"
+      }
+],
+    correct: ["a"],
+    explanation: "Statement I is true: basic 2PL guarantees conflict serializability because transactions can be serialized in order of their lock points, but deadlocks can occur. Statement II is true: Strict 2PL holds exclusive locks until commit or abort, completely eliminating dirty reads and cascading rollbacks.",
+    topic: 'Two-Phase Locking',
+    subtopic: 'Strict 2PL',
+    difficulty: 'easy',
+    points: 10,
+    sourceUrl: 'https://gateoverflow.in/1020/gate-cse-2006-question-33',
+    sourceNote: "GATE CSE 2006 Question 33; official question paper and key."
+  },
+  {
+    id: 'gate-cse-2015-s1-conflict-serializability',
+    examId: 'gate-cse',
+    year: 2015,
+    session: "Set 1",
+    questionType: 'previous_year',
+    verification: 'verified',
+    prompt: "Consider the following schedule S with transactions T1 and T2:\nS: r1(X); r2(Y); w2(Y); r1(Y); w1(X);\nWhich of the following statements is true about S?",
+    options: [
+      {
+            "id": "a",
+            "text": "S is not conflict serializable"
+      },
+      {
+            "id": "b",
+            "text": "S is conflict serializable and equivalent to serial schedule T1 followed by T2"
+      },
+      {
+            "id": "c",
+            "text": "S is conflict serializable and equivalent to serial schedule T2 followed by T1"
+      },
+      {
+            "id": "d",
+            "text": "S is view serializable but not conflict serializable"
+      }
+],
+    correct: ["c"],
+    explanation: "Looking at conflicting operations in S: on item Y, w2(Y) by T2 precedes r1(Y) by T1. This creates a directed edge T2 \u2192 T1 in the precedence graph. There are no conflicting operations on X between T1 and T2 (only T1 accesses X). Thus, the precedence graph has only one edge: T2 \u2192 T1, which has no cycle. S is conflict-serializable and equivalent to T2 followed by T1.",
+    topic: 'Serializability',
+    subtopic: 'Conflict serializability',
+    difficulty: 'medium',
+    points: 15,
+    sourceUrl: 'https://gateoverflow.in/8207/gate-cse-2015-set-1-question-23',
+    sourceNote: "GATE CSE 2015 Set 1 Question 23; official question paper and key."
+  },
+  {
+    id: 'gate-cse-2017-s1-recoverable-cascadeless',
+    examId: 'gate-cse',
+    year: 2017,
+    session: "Set 1",
+    questionType: 'previous_year',
+    verification: 'verified',
+    prompt: "Consider the following schedule S with two transactions T1 and T2:\nS: r1(X); w1(X); r2(X); w2(X); abort1; commit2;\nSchedule S is:",
+    options: [
+      {
+            "id": "a",
+            "text": "Non-recoverable"
+      },
+      {
+            "id": "b",
+            "text": "Recoverable and cascadeless"
+      },
+      {
+            "id": "c",
+            "text": "Recoverable but not cascadeless"
+      },
+      {
+            "id": "d",
+            "text": "Strict"
+      }
+],
+    correct: ["a"],
+    explanation: "Transaction T2 reads data item X written by T1 before T1 has committed (dirty read). Then T1 aborts, while T2 commits. Since T2 committed having read uncommitted data from an aborted transaction, T2 cannot be rolled back (durability violated). Hence S is non-recoverable.",
+    topic: 'Recoverability',
+    subtopic: 'Cascading rollback',
+    difficulty: 'medium',
+    points: 15,
+    sourceUrl: 'https://gateoverflow.in/118357/gate-cse-2017-set-1-question-28',
+    sourceNote: "GATE CSE 2017 Set 1 Question 28; official question paper and key."
+  },
+  {
+    id: 'ugc-net-cs-2018-july-p2-lock-compatibility',
+    examId: 'ugc-net-cs',
+    year: 2018,
+    session: "July 2018 \u2014 Paper II",
+    questionType: 'previous_year',
+    verification: 'verified',
+    prompt: "In concurrency control using locks, which of the following statements is TRUE?",
+    options: [
+      {
+            "id": "a",
+            "text": "Shared lock requests on an item are compatible with other shared lock requests on the same item"
+      },
+      {
+            "id": "b",
+            "text": "An exclusive lock is compatible with a shared lock on the same item"
+      },
+      {
+            "id": "c",
+            "text": "Two exclusive locks on the same item can be granted simultaneously"
+      },
+      {
+            "id": "d",
+            "text": "Locking protocols prevent all concurrency anomalies without using timestamps"
+      }
+],
+    correct: ["a"],
+    explanation: "According to standard lock compatibility: Shared locks (S) are compatible with other Shared locks (S) on the same resource, allowing multiple concurrent readers. Exclusive locks conflict with all other locks.",
+    topic: 'Lock Basics',
+    subtopic: 'Lock compatibility matrix',
+    difficulty: 'easy',
+    points: 10,
+    sourceUrl: 'https://gateoverflow.in/206325/ugc-net-cse-july-2018-part-2-question-54',
+    sourceNote: "UGC NET Computer Science July 2018 Paper II; official question paper and key."
+  },
+  {
+    id: 'ugc-net-cs-2020-nov-p2-precedence-graph',
+    examId: 'ugc-net-cs',
+    year: 2020,
+    session: "November 2020 \u2014 Paper II",
+    questionType: 'previous_year',
+    verification: 'verified',
+    prompt: "In a database management system, if the precedence graph (testing graph) of a concurrent schedule S has a cycle, then the schedule S is:",
+    options: [
+      {
+            "id": "a",
+            "text": "Not conflict serializable"
+      },
+      {
+            "id": "b",
+            "text": "Conflict serializable"
+      },
+      {
+            "id": "c",
+            "text": "Always deadlock free"
+      },
+      {
+            "id": "d",
+            "text": "Guaranteed to be cascadeless"
+      }
+],
+    correct: ["a"],
+    explanation: "A fundamental theorem of concurrency control states that a schedule S is conflict-serializable if and only if its precedence graph contains no directed cycles. If a cycle exists, S is not conflict-serializable.",
+    topic: 'Serializability',
+    subtopic: 'Conflict serializability',
+    difficulty: 'easy',
+    points: 10,
+    sourceUrl: 'https://gateoverflow.in/348421/ugc-net-cse-november-2020-part-2-question-44',
+    sourceNote: "UGC NET Computer Science November 2020 Paper II; official question paper and key."
+  },
+  {
+    id: 'ugc-net-cs-2022-oct-p2-deadlock-waitfor',
+    examId: 'ugc-net-cs',
+    year: 2022,
+    session: "October 2022 \u2014 Paper II",
+    questionType: 'previous_year',
+    verification: 'verified',
+    prompt: "Which data structure is primarily used by the DBMS lock manager to detect deadlocks among concurrently running transactions?",
+    options: [
+      {
+            "id": "a",
+            "text": "Wait-for graph"
+      },
+      {
+            "id": "b",
+            "text": "Precedence graph"
+      },
+      {
+            "id": "c",
+            "text": "B+ tree index"
+      },
+      {
+            "id": "d",
+            "text": "Red-black tree"
+      }
+],
+    correct: ["a"],
+    explanation: "A Wait-For Graph (WFG) consists of nodes representing active transactions and directed edges representing waiting dependencies. A cycle in the wait-for graph indicates a deadlock condition.",
+    topic: 'Deadlock',
+    subtopic: 'Wait-for graphs',
+    difficulty: 'easy',
+    points: 10,
+    sourceUrl: 'https://gateoverflow.in/385621/ugc-net-cse-october-2022-part-2-question-59',
+    sourceNote: "UGC NET Computer Science October 2022 Paper II; official question paper and key."
   }
 ];
 

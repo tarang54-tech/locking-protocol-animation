@@ -771,5 +771,680 @@ module.exports = [
     topic: 'Lock Basics',
     subtopic: 'Shared vs exclusive locks',
     reference: 'Learn § 2.4 Shared Lock (S-Lock)'
+  },
+  {
+    id: 'easy-51',
+    prompt: "In a lock compatibility matrix, which pair of lock requests on the same data item is compatible?",
+    options: [
+      {
+            "id": "a",
+            "text": "Shared (S) and Shared (S)"
+      },
+      {
+            "id": "b",
+            "text": "Shared (S) and Exclusive (X)"
+      },
+      {
+            "id": "c",
+            "text": "Exclusive (X) and Shared (S)"
+      },
+      {
+            "id": "d",
+            "text": "Exclusive (X) and Exclusive (X)"
+      }
+],
+    correct: ["a"],
+    explanation: "In the standard lock compatibility matrix, only Shared-Shared (S-S) locks are compatible with each other on the same data item. Any combination involving an Exclusive (X) lock conflicts.",
+    topic: 'Lock Basics',
+    subtopic: 'Lock compatibility matrix',
+    reference: 'Learn § 2.4 Shared Lock (S-Lock)'
+  },
+  {
+    id: 'easy-52',
+    prompt: "What occurs during the growing phase of the basic Two-Phase Locking (2PL) protocol?",
+    options: [
+      {
+            "id": "a",
+            "text": "A transaction may acquire new locks, but cannot release any locks"
+      },
+      {
+            "id": "b",
+            "text": "A transaction may release locks, but cannot acquire any new locks"
+      },
+      {
+            "id": "c",
+            "text": "A transaction can both acquire and release locks freely"
+      },
+      {
+            "id": "d",
+            "text": "All locks are converted exclusively to shared locks"
+      }
+],
+    correct: ["a"],
+    explanation: "In the growing (or expanding) phase of 2PL, a transaction may acquire new locks as needed, but is strictly prohibited from releasing any locks.",
+    topic: 'Two-Phase Locking',
+    subtopic: 'Growing and shrinking phases',
+    reference: 'Learn § 4.1 Basic Two-Phase Locking'
+  },
+  {
+    id: 'easy-53',
+    prompt: "What marks the beginning of the shrinking phase in basic Two-Phase Locking (2PL)?",
+    options: [
+      {
+            "id": "a",
+            "text": "The release of the very first lock by the transaction"
+      },
+      {
+            "id": "b",
+            "text": "The commit of the transaction"
+      },
+      {
+            "id": "c",
+            "text": "The acquisition of the final lock required"
+      },
+      {
+            "id": "d",
+            "text": "The rollback of any conflicting transaction"
+      }
+],
+    correct: ["a"],
+    explanation: "The shrinking phase begins the moment a transaction releases its first lock. Once this happens, the lock point has been passed and no new locks can ever be acquired.",
+    topic: 'Two-Phase Locking',
+    subtopic: 'Growing and shrinking phases',
+    reference: 'Learn § 4.1 Basic Two-Phase Locking'
+  },
+  {
+    id: 'easy-54',
+    prompt: "What is the lock point of a transaction under basic Two-Phase Locking?",
+    options: [
+      {
+            "id": "a",
+            "text": "The point in time when the transaction acquires its final lock"
+      },
+      {
+            "id": "b",
+            "text": "The moment the transaction issues its very first read operation"
+      },
+      {
+            "id": "c",
+            "text": "The time when the transaction commits and writes to disk"
+      },
+      {
+            "id": "d",
+            "text": "The moment when all locks are finally released"
+      }
+],
+    correct: ["a"],
+    explanation: "The lock point is the exact instant when a transaction has acquired the last lock it needs before it starts releasing locks. The serialization order of transactions is determined by their lock points.",
+    topic: 'Two-Phase Locking',
+    subtopic: 'Growing and shrinking phases',
+    reference: 'Learn § 4.1 Basic Two-Phase Locking'
+  },
+  {
+    id: 'easy-55',
+    prompt: "In Strict Two-Phase Locking (Strict 2PL), when are exclusive (X) locks released?",
+    options: [
+      {
+            "id": "a",
+            "text": "Only after the transaction commits or aborts"
+      },
+      {
+            "id": "b",
+            "text": "As soon as the write operation on the item completes"
+      },
+      {
+            "id": "c",
+            "text": "Immediately when the shrinking phase begins"
+      },
+      {
+            "id": "d",
+            "text": "Whenever another transaction requests a shared lock on the item"
+      }
+],
+    correct: ["a"],
+    explanation: "Strict 2PL requires that all exclusive (X) locks held by a transaction must be retained until the transaction terminates (commits or aborts), preventing dirty reads and cascading rollbacks.",
+    topic: 'Two-Phase Locking',
+    subtopic: 'Strict 2PL',
+    reference: 'Learn § 4.2 Strict Two-Phase Locking'
+  },
+  {
+    id: 'easy-56',
+    prompt: "How does Rigorous Two-Phase Locking differ from Strict Two-Phase Locking?",
+    options: [
+      {
+            "id": "a",
+            "text": "Rigorous 2PL holds BOTH shared (S) and exclusive (X) locks until commit or abort"
+      },
+      {
+            "id": "b",
+            "text": "Rigorous 2PL holds only shared locks until commit and releases X locks early"
+      },
+      {
+            "id": "c",
+            "text": "Rigorous 2PL acquires all locks atomically before execution begins"
+      },
+      {
+            "id": "d",
+            "text": "Rigorous 2PL completely eliminates deadlocks"
+      }
+],
+    correct: ["a"],
+    explanation: "While Strict 2PL holds all exclusive locks until end-of-transaction, Rigorous 2PL holds all locks (both shared and exclusive) until the transaction commits or aborts.",
+    topic: 'Two-Phase Locking',
+    subtopic: 'Rigorous 2PL',
+    reference: 'Learn § 4.2 Strict Two-Phase Locking'
+  },
+  {
+    id: 'easy-57',
+    prompt: "What is the primary operational rule of Conservative (Static) Two-Phase Locking?",
+    options: [
+      {
+            "id": "a",
+            "text": "A transaction must pre-declare and acquire all required locks before starting execution"
+      },
+      {
+            "id": "b",
+            "text": "A transaction never releases any locks until 10 seconds after commit"
+      },
+      {
+            "id": "c",
+            "text": "A transaction only locks tables, never individual rows or disk pages"
+      },
+      {
+            "id": "d",
+            "text": "Shared locks are automatically upgraded to exclusive locks upon reading"
+      }
+],
+    correct: ["a"],
+    explanation: "Conservative 2PL requires a transaction to lock all items it will access before execution begins. If any item cannot be locked, it waits without holding any locks, thereby avoiding deadlocks.",
+    topic: 'Two-Phase Locking',
+    subtopic: 'Conservative 2PL',
+    reference: 'Learn § 4.3 Conservative Two-Phase Locking'
+  },
+  {
+    id: 'easy-58',
+    prompt: "Which of the following protocols is inherently deadlock-free by design?",
+    options: [
+      {
+            "id": "a",
+            "text": "Conservative (Static) Two-Phase Locking"
+      },
+      {
+            "id": "b",
+            "text": "Basic Two-Phase Locking"
+      },
+      {
+            "id": "c",
+            "text": "Strict Two-Phase Locking"
+      },
+      {
+            "id": "d",
+            "text": "Rigorous Two-Phase Locking"
+      }
+],
+    correct: ["a"],
+    explanation: "Because Conservative 2PL acquires all required locks upfront or none at all (it does not hold some locks while waiting for others), it eliminates the hold-and-wait condition, making deadlock impossible.",
+    topic: 'Deadlock',
+    subtopic: 'Deadlock prevention',
+    reference: 'Learn § 4.3 Conservative Two-Phase Locking'
+  },
+  {
+    id: 'easy-59',
+    prompt: "What does a directed edge from transaction T1 to T2 (T1 \u2192 T2) in a Wait-For Graph (WFG) signify?",
+    options: [
+      {
+            "id": "a",
+            "text": "T1 is waiting for a lock currently held by T2"
+      },
+      {
+            "id": "b",
+            "text": "T2 is waiting for a lock currently held by T1"
+      },
+      {
+            "id": "c",
+            "text": "T1 committed before T2 started"
+      },
+      {
+            "id": "d",
+            "text": "T1 has aborted T2 due to timestamp superiority"
+      }
+],
+    correct: ["a"],
+    explanation: "In a Wait-For Graph (WFG), a directed edge T1 \u2192 T2 indicates that transaction T1 is waiting for data item(s) currently locked by transaction T2.",
+    topic: 'Deadlock',
+    subtopic: 'Wait-for graph',
+    reference: 'Learn § 5 Deadlock Theory'
+  },
+  {
+    id: 'easy-60',
+    prompt: "What does the presence of a cycle in a Wait-For Graph indicate in a database system?",
+    options: [
+      {
+            "id": "a",
+            "text": "A deadlock exists among the transactions forming the cycle"
+      },
+      {
+            "id": "b",
+            "text": "The execution schedule is guaranteed to be conflict-serializable"
+      },
+      {
+            "id": "c",
+            "text": "A cascading rollback has been triggered"
+      },
+      {
+            "id": "d",
+            "text": "All transactions in the cycle have committed successfully"
+      }
+],
+    correct: ["a"],
+    explanation: "A cycle in a Wait-For Graph indicates a circular wait condition where every transaction in the cycle is waiting for a resource held by another, meaning a deadlock has occurred.",
+    topic: 'Deadlock',
+    subtopic: 'Wait-for graph',
+    reference: 'Learn § 5 Deadlock Theory'
+  },
+  {
+    id: 'easy-61',
+    prompt: "In Multiple Granularity Locking (MGL), what does an Intention Shared (IS) lock at a higher node indicate?",
+    options: [
+      {
+            "id": "a",
+            "text": "Explicit shared locking will be performed at a finer (lower) level of the hierarchy"
+      },
+      {
+            "id": "b",
+            "text": "The entire subtree rooted at this node is locked in shared mode"
+      },
+      {
+            "id": "c",
+            "text": "Exclusive locks are held on all children of this node"
+      },
+      {
+            "id": "d",
+            "text": "The node is locked for intentional deletion"
+      }
+],
+    correct: ["a"],
+    explanation: "An Intention Shared (IS) lock indicates that the transaction intends to acquire explicit Shared (S) locks at a lower, finer granularity level in the hierarchy tree.",
+    topic: 'Multiple Granularity Locking',
+    subtopic: 'Intention locks',
+    reference: 'Learn § 6 Multiple Granularity'
+  },
+  {
+    id: 'easy-62',
+    prompt: "In Multiple Granularity Locking (MGL), what does an Intention Exclusive (IX) lock signify?",
+    options: [
+      {
+            "id": "a",
+            "text": "Explicit exclusive or shared locking will be performed at a lower level of the hierarchy"
+      },
+      {
+            "id": "b",
+            "text": "The entire table or database is locked exclusively"
+      },
+      {
+            "id": "c",
+            "text": "All lower level locks must be released immediately"
+      },
+      {
+            "id": "d",
+            "text": "No lower level locks may be acquired by this transaction"
+      }
+],
+    correct: ["a"],
+    explanation: "An Intention Exclusive (IX) lock explicitly signals that lower-level granular items (e.g., rows or pages) will be locked in exclusive or shared mode.",
+    topic: 'Multiple Granularity Locking',
+    subtopic: 'Intention locks',
+    reference: 'Learn § 6 Multiple Granularity'
+  },
+  {
+    id: 'easy-63',
+    prompt: "Are Intention Shared (IS) and Intention Exclusive (IX) locks compatible on the same node?",
+    options: [
+      {
+            "id": "a",
+            "text": "Yes, IS and IX are compatible with each other"
+      },
+      {
+            "id": "b",
+            "text": "No, IS and IX always conflict"
+      },
+      {
+            "id": "c",
+            "text": "Only if both are held by the exact same transaction"
+      },
+      {
+            "id": "d",
+            "text": "Only if the node represents an individual record"
+      }
+],
+    correct: ["a"],
+    explanation: "In the MGL compatibility matrix, IS and IX are compatible. One transaction can read some records (IS) while another writes different records (IX) within the same table.",
+    topic: 'Multiple Granularity Locking',
+    subtopic: 'Intention locks',
+    reference: 'Learn § 6 Multiple Granularity'
+  },
+  {
+    id: 'easy-64',
+    prompt: "What does a Shared Intention Exclusive (SIX) lock represent in Multiple Granularity Locking?",
+    options: [
+      {
+            "id": "a",
+            "text": "The node is locked in shared mode, and explicit exclusive locking will be done at lower levels"
+      },
+      {
+            "id": "b",
+            "text": "Six transactions are sharing an exclusive lock simultaneously"
+      },
+      {
+            "id": "c",
+            "text": "The node allows shared locks only after six clock cycles"
+      },
+      {
+            "id": "d",
+            "text": "An intention lock used strictly for index leaf nodes"
+      }
+],
+    correct: ["a"],
+    explanation: "A SIX lock combines S and IX: the entire subtree is locked in Shared mode (so the holder can read everything), and the transaction intends to acquire explicit Exclusive locks on specific lower-level items.",
+    topic: 'Multiple Granularity Locking',
+    subtopic: 'Intention locks',
+    reference: 'Learn § 6 Multiple Granularity'
+  },
+  {
+    id: 'easy-65',
+    prompt: "What is lock escalation in a Database Management System?",
+    options: [
+      {
+            "id": "a",
+            "text": "Converting many fine-grained locks (such as row locks) into a single coarse-grained lock (such as a table lock)"
+      },
+      {
+            "id": "b",
+            "text": "Automatically upgrading every read lock to a write lock after 10 seconds"
+      },
+      {
+            "id": "c",
+            "text": "Raising the priority of a transaction waiting in a lock queue"
+      },
+      {
+            "id": "d",
+            "text": "Releasing locks before transactions commit to save memory"
+      }
+],
+    correct: ["a"],
+    explanation: "Lock escalation is the process of converting numerous fine-grained locks (like thousands of individual row locks) into a single coarser lock (such as a table lock) to free lock manager memory.",
+    topic: 'Multiple Granularity Locking',
+    subtopic: 'Lock escalation',
+    reference: 'Learn § 6 Multiple Granularity'
+  },
+  {
+    id: 'easy-66',
+    prompt: "What is the primary role of an Update (U) lock?",
+    options: [
+      {
+            "id": "a",
+            "text": "To prevent a common deadlock when multiple transactions read with intent to update later"
+      },
+      {
+            "id": "b",
+            "text": "To force immediate update of database indexes on disk"
+      },
+      {
+            "id": "c",
+            "text": "To update transaction timestamps upon commit"
+      },
+      {
+            "id": "d",
+            "text": "To permit concurrent writing by multiple transactions"
+      }
+],
+    correct: ["a"],
+    explanation: "An Update (U) lock is used when reading an item that might later be updated. Since U locks are mutually incompatible, only one transaction can hold a U lock, avoiding conversion deadlocks where two transactions hold S locks and both wait for X.",
+    topic: 'Lock Basics',
+    subtopic: 'Update locks',
+    reference: 'Learn § 2 Lock Types'
+  },
+  {
+    id: 'easy-67',
+    prompt: "In the Wait-Die deadlock prevention scheme, what happens if an older transaction requests a lock held by a younger transaction?",
+    options: [
+      {
+            "id": "a",
+            "text": "The older transaction is allowed to wait"
+      },
+      {
+            "id": "b",
+            "text": "The older transaction is aborted and dies"
+      },
+      {
+            "id": "c",
+            "text": "The younger transaction is aborted immediately"
+      },
+      {
+            "id": "d",
+            "text": "Both transactions are rolled back"
+      }
+],
+    correct: ["a"],
+    explanation: "In Wait-Die: Old requests Young \u2192 Old is allowed to WAIT. Young requests Old \u2192 Young is aborted (DIES). Hence an older transaction waiting for a younger one simply waits.",
+    topic: 'Deadlock',
+    subtopic: 'Wait-Die and Wound-Wait',
+    reference: 'Learn § 5.2 Prevention'
+  },
+  {
+    id: 'easy-68',
+    prompt: "In the Wait-Die deadlock prevention scheme, what happens if a younger transaction requests a lock held by an older transaction?",
+    options: [
+      {
+            "id": "a",
+            "text": "The younger transaction dies (aborts and restarts)"
+      },
+      {
+            "id": "b",
+            "text": "The younger transaction is allowed to wait"
+      },
+      {
+            "id": "c",
+            "text": "The older transaction is killed"
+      },
+      {
+            "id": "d",
+            "text": "The lock is granted immediately to both"
+      }
+],
+    correct: ["a"],
+    explanation: "In Wait-Die, if a younger transaction requests a resource held by an older transaction, the younger transaction is not permitted to wait; it dies (aborts and restarts with its original timestamp).",
+    topic: 'Deadlock',
+    subtopic: 'Wait-Die and Wound-Wait',
+    reference: 'Learn § 5.2 Prevention'
+  },
+  {
+    id: 'easy-69',
+    prompt: "In the Wound-Wait deadlock prevention scheme, what happens if an older transaction requests a lock held by a younger transaction?",
+    options: [
+      {
+            "id": "a",
+            "text": "The older transaction wounds (preempts/aborts) the younger transaction"
+      },
+      {
+            "id": "b",
+            "text": "The older transaction is aborted and dies"
+      },
+      {
+            "id": "c",
+            "text": "The older transaction is forced to wait indefinitely"
+      },
+      {
+            "id": "d",
+            "text": "The younger transaction is upgraded to exclusive mode"
+      }
+],
+    correct: ["a"],
+    explanation: "In Wound-Wait: Old requests Young \u2192 Old WOUNDS Young (Young is aborted and rolls back). Young requests Old \u2192 Young WAITS.",
+    topic: 'Deadlock',
+    subtopic: 'Wait-Die and Wound-Wait',
+    reference: 'Learn § 5.2 Prevention'
+  },
+  {
+    id: 'easy-70',
+    prompt: "In the Wound-Wait deadlock prevention scheme, what happens if a younger transaction requests a lock held by an older transaction?",
+    options: [
+      {
+            "id": "a",
+            "text": "The younger transaction is allowed to wait"
+      },
+      {
+            "id": "b",
+            "text": "The younger transaction wounds the older transaction"
+      },
+      {
+            "id": "c",
+            "text": "The younger transaction is aborted immediately"
+      },
+      {
+            "id": "d",
+            "text": "The older transaction is restarted with a new timestamp"
+      }
+],
+    correct: ["a"],
+    explanation: "In Wound-Wait, if a younger transaction requests a resource held by an older transaction, the younger transaction is allowed to wait.",
+    topic: 'Deadlock',
+    subtopic: 'Wait-Die and Wound-Wait',
+    reference: 'Learn § 5.2 Prevention'
+  },
+  {
+    id: 'easy-71',
+    prompt: "What happens to a transaction timestamp when it is aborted and restarted under Wait-Die or Wound-Wait?",
+    options: [
+      {
+            "id": "a",
+            "text": "It retains its original timestamp to prevent starvation"
+      },
+      {
+            "id": "b",
+            "text": "It receives a brand-new current timestamp making it younger"
+      },
+      {
+            "id": "c",
+            "text": "Its timestamp is doubled to lower its priority"
+      },
+      {
+            "id": "d",
+            "text": "Its timestamp is removed and converted to a random priority"
+      }
+],
+    correct: ["a"],
+    explanation: "To prevent starvation, an aborted transaction in timestamp-based deadlock prevention schemes is restarted with its original timestamp so it progressively becomes the oldest transaction in the system.",
+    topic: 'Deadlock',
+    subtopic: 'Wait-Die and Wound-Wait',
+    reference: 'Learn § 5.2 Prevention'
+  },
+  {
+    id: 'easy-72',
+    prompt: "What is a cascading rollback (or cascading abort)?",
+    options: [
+      {
+            "id": "a",
+            "text": "The failure of one transaction causes other transactions that read its uncommitted changes to also abort"
+      },
+      {
+            "id": "b",
+            "text": "A transaction that rolls back and immediately restarts ten times"
+      },
+      {
+            "id": "c",
+            "text": "Rolling back the database log when disk storage is exhausted"
+      },
+      {
+            "id": "d",
+            "text": "A deadlock resolution technique that kills all transactions simultaneously"
+      }
+],
+    correct: ["a"],
+    explanation: "Cascading rollback occurs when the failure/abort of one transaction T forces other transactions that read uncommitted data written by T to also be aborted and rolled back.",
+    topic: 'Transactions',
+    subtopic: 'Cascading rollbacks',
+    reference: 'Learn § 4.2 Strict Two-Phase Locking'
+  },
+  {
+    id: 'easy-73',
+    prompt: "Which locking protocol is guaranteed to be Cascadeless (prevents cascading rollbacks)?",
+    options: [
+      {
+            "id": "a",
+            "text": "Strict Two-Phase Locking"
+      },
+      {
+            "id": "b",
+            "text": "Basic Two-Phase Locking without strictness"
+      },
+      {
+            "id": "c",
+            "text": "Tree-based locking protocol with early release"
+      },
+      {
+            "id": "d",
+            "text": "Shared-only locking with early unlock"
+      }
+],
+    correct: ["a"],
+    explanation: "Strict 2PL prevents cascading aborts because exclusive locks are held until commit, meaning no other transaction can read uncommitted data (dirty reads are completely prevented).",
+    topic: 'Two-Phase Locking',
+    subtopic: 'Strict 2PL',
+    reference: 'Learn § 4.2 Strict Two-Phase Locking'
+  },
+  {
+    id: 'easy-74',
+    prompt: "In a precedence graph (serialization graph), what does a directed edge from Ti to Tj represent?",
+    options: [
+      {
+            "id": "a",
+            "text": "An operation of Ti executed before and conflicted with an operation of Tj"
+      },
+      {
+            "id": "b",
+            "text": "Ti is blocked waiting for Tj to release a lock"
+      },
+      {
+            "id": "c",
+            "text": "Tj committed before Ti started"
+      },
+      {
+            "id": "d",
+            "text": "Ti has a smaller timestamp than Tj"
+      }
+],
+    correct: ["a"],
+    explanation: "In a precedence graph, an edge Ti \u2192 Tj means there is a conflicting operation between Ti and Tj, and Ti executed its conflicting operation before Tj.",
+    topic: 'Serializability',
+    subtopic: 'Precedence graph',
+    reference: 'Learn § 3 Serializability'
+  },
+  {
+    id: 'easy-75',
+    prompt: "A schedule is conflict-serializable if and only if its precedence graph:",
+    options: [
+      {
+            "id": "a",
+            "text": "Contains no cycles (is acyclic)"
+      },
+      {
+            "id": "b",
+            "text": "Contains at least one cycle"
+      },
+      {
+            "id": "c",
+            "text": "Has all edges pointing in a single direction towards one terminal node"
+      },
+      {
+            "id": "d",
+            "text": "Is completely disconnected with no edges"
+      }
+],
+    correct: ["a"],
+    explanation: "A schedule S is conflict-serializable if and only if its serialization graph (precedence graph) has no cycles (is a Directed Acyclic Graph / DAG).",
+    topic: 'Serializability',
+    subtopic: 'Conflict serializability',
+    reference: 'Learn § 3 Serializability'
   }
 ];

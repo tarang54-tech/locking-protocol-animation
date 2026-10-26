@@ -36,25 +36,26 @@ database-backed leaderboard.
 - Dark / light mode, fully responsive, keyboard accessible
 
 ### Quiz (Easy / Medium / Hard)
-- Three difficulty levels with **50 questions each** (150 in total)
-- The level describes **how hard the question itself is — not which topic it
-  covers**: every level mixes lock basics, two-phase locking, deadlocks,
-  serializability, transactions and concurrency control
+- Three difficulty levels with a large curated question bank:
+  - **Easy:** 75 questions (Foundational lock concepts, compatibility, 2PL basics)
+  - **Medium:** 100 questions (Protocol variations, upgrades/downgrades, intention locks, deadlocks)
+  - **Hard:** 75 questions (Protocol violations, precedence graphs, cascading rollbacks, recoverability)
+  - **Total standard difficulty quiz questions:** 250 questions
+- The level describes **how hard the question itself is — not which topic it covers**: every level mixes lock basics, two-phase locking, deadlocks, serializability, transactions and concurrency control
 - One question per screen, randomised question order and randomised option order
-- Immediate feedback with the correct answer, an explanation and a link to the
-  matching Learn section
+- Immediate feedback with the correct answer, an explanation and a link to the matching Learn section
 - Previous / Next navigation, answer review, percentage, accuracy and points
 - **Server-side scoring** — the browser never sends or receives a score
-- Every attempt is saved to the signed-in account, so scores and the leaderboard
-  entry are always attributed to the right person
+- Every attempt is saved to the signed-in account, so scores and the leaderboard entry are always attributed to the right person
 
 ### Competitive Exams (separate section)
-- GATE CSE and UGC NET Computer Science
-- Filters for examination, year, topic and question type
-- **Verified previous-year questions** carry the examination, year, session, the
-  source link and the verification status
-- Generated questions are always labelled **Exam-Style Practice Question**
+- 95 competitive examination questions (20 verified PYQs + 75 exam-style practice questions)
+- **GATE CSE** (1999–2026) and **UGC NET Computer Science & Applications** (2014–2025)
+- Filters for examination, year, topic, difficulty, and question type
+- **Verified previous-year questions (20 questions)** carry the examination name, year, session/paper, verified source link (GateOverflow, ExamSide, SolutionsAdda), and full explanation
+- Practice questions (75 questions) are strictly labelled **Exam-Style Practice Question — Not a Verified PYQ**
 - A browsable catalogue with provenance for every question
+- **Total question bank:** 345 distinct, verified questions across quizzes and competitive exams
 
 ### Accounts, history and leaderboard
 - **Signing in is compulsory** — a full-screen sign-in gate is shown before the
@@ -666,9 +667,9 @@ It is driven by the live simulator state, not by a static table:
 
 ## Known limitations
 
-- The verified previous-year collection is small (7 questions). It is deliberately
-  conservative: a question is only added when the year and the answer key can be
-  traced to a public source.- The question bank is public by nature — the API serves the questions to the
+- The verified previous-year collection contains 20 fully verified questions across GATE CSE and UGC NET CS. It is deliberately
+  conservative: a question is only added when the examination name, year, and answer key can be traced to a verifiable public source.
+- Generated questions (75 questions) are strictly labelled "Exam-Style Practice Question — Not a Verified PYQ" to avoid misattribution.
   browser, so the answer key can be read by someone who inspects the network
   traffic. The leaderboard itself cannot be manipulated this way, because the score
   is recomputed on the server from the stored key.

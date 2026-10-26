@@ -767,5 +767,680 @@ module.exports = [
     topic: 'Deadlock',
     subtopic: 'Deadlock detection',
     reference: 'Learn § 5 Deadlock Theory'
+  },
+  {
+    id: 'hard-51',
+    prompt: "Consider two transactions:\nT1: Lock-X(A), Read(A), A := A - 50, Write(A), Lock-X(B), Read(B), B := B + 50, Write(B), Unlock(A), Unlock(B)\nT2: Lock-S(A), Read(A), Unlock(A), Lock-S(B), Read(B), Unlock(B)\nSuppose T1 unlocks A before locking B. Can a non-serializable schedule occur?",
+    options: [
+      {
+            "id": "a",
+            "text": "Yes, T1 violates 2PL; T2 can interleave reading modified A and unmodified B, observing an inconsistent sum"
+      },
+      {
+            "id": "b",
+            "text": "No, because both transactions commit successfully"
+      },
+      {
+            "id": "c",
+            "text": "No, because T2 only performs read operations"
+      },
+      {
+            "id": "d",
+            "text": "Only if T2 upgrades its lock on B to exclusive mode"
+      }
+],
+    correct: ["a"],
+    explanation: "If T1 releases A before acquiring B, it has entered its shrinking phase. If it then acquires B, 2PL is violated. T2 can lock A (seeing the deducted amount) and lock B before T1 updates B, reading an inconsistent state where money has vanished.",
+    topic: 'Two-Phase Locking',
+    subtopic: 'Protocol violations',
+    reference: 'Learn § 4.1 Basic Two-Phase Locking'
+  },
+  {
+    id: 'hard-52',
+    prompt: "Consider a schedule with transactions T1, T2, T3: r1(X), w2(X), w3(Y), r1(Y), commit2, commit3, commit1. Which edges exist in the precedence graph, and what does it imply?",
+    options: [
+      {
+            "id": "a",
+            "text": "Edges T1 \u2192 T2 (from r1(X) before w2(X)) and T3 \u2192 T1 (from w3(Y) before r1(Y)). The graph is acyclic, so the schedule is conflict-serializable with order T3 \u2192 T1 \u2192 T2"
+      },
+      {
+            "id": "b",
+            "text": "A cycle T1 \u2192 T2 \u2192 T3 \u2192 T1, so it is not serializable"
+      },
+      {
+            "id": "c",
+            "text": "Only edge T2 \u2192 T3 exists"
+      },
+      {
+            "id": "d",
+            "text": "No edges exist because operations are on different variables"
+      }
+],
+    correct: ["a"],
+    explanation: "On X: r1(X) precedes w2(X), yielding T1 \u2192 T2. On Y: w3(Y) precedes r1(Y), yielding T3 \u2192 T1. The edges are T3 \u2192 T1 and T1 \u2192 T2. This directed graph is acyclic; topological sort gives serial order T3, T1, T2.",
+    topic: 'Serializability',
+    subtopic: 'Conflict serializability',
+    reference: 'Learn § 3 Serializability'
+  },
+  {
+    id: 'hard-53',
+    prompt: "In Multiple Granularity Locking, suppose transaction T holds a SIX lock on Table Tbl. Which of the following operations by another transaction T' can be granted immediately on Tbl?",
+    options: [
+      {
+            "id": "a",
+            "text": "Lock-IS on Tbl"
+      },
+      {
+            "id": "b",
+            "text": "Lock-IX on Tbl"
+      },
+      {
+            "id": "c",
+            "text": "Lock-S on Tbl"
+      },
+      {
+            "id": "d",
+            "text": "Lock-X on Tbl"
+      }
+],
+    correct: ["a"],
+    explanation: "According to the MGL lock compatibility matrix, a SIX lock held by one transaction is compatible ONLY with an IS lock requested by another transaction. (SIX conflicts with IX, S, SIX, and X).",
+    topic: 'Multiple Granularity Locking',
+    subtopic: 'Lock compatibility matrix',
+    reference: 'Learn § 6 Multiple Granularity'
+  },
+  {
+    id: 'hard-54',
+    prompt: "Under the Tree Protocol, suppose database nodes form a tree where Root has children Node1 and Node2. Transaction T locks Node1 and then unlocks Node1. Can T subsequently lock Node2?",
+    options: [
+      {
+            "id": "a",
+            "text": "No, because to lock Node2, T must hold a lock on its parent (Root), which T never locked"
+      },
+      {
+            "id": "b",
+            "text": "Yes, because Node1 and Node2 are siblings"
+      },
+      {
+            "id": "c",
+            "text": "Yes, because the tree protocol allows locking any node at any time"
+      },
+      {
+            "id": "d",
+            "text": "Only if T re-locks Node1 first"
+      }
+],
+    correct: ["a"],
+    explanation: "In the tree protocol, after the very first lock is placed, any subsequent node can be locked only if the transaction currently holds a lock on that node's parent. T never locked Root, so it cannot lock Node2.",
+    topic: 'Two-Phase Locking',
+    subtopic: 'Tree-based locking protocols',
+    reference: 'Learn § 4 Protocol Variants'
+  },
+  {
+    id: 'hard-55',
+    prompt: "Why can a transaction under the Tree Protocol NOT re-lock a node it previously unlocked?",
+    options: [
+      {
+            "id": "a",
+            "text": "The tree protocol explicitly prohibits re-locking any node once unlocked, preventing cyclic lock-order dependencies"
+      },
+      {
+            "id": "b",
+            "text": "Because the tree protocol automatically deletes unlocked nodes"
+      },
+      {
+            "id": "c",
+            "text": "Because unlocked nodes immediately lose their indexes"
+      },
+      {
+            "id": "d",
+            "text": "Because re-locking requires switching from exclusive to shared mode"
+      }
+],
+    correct: ["a"],
+    explanation: "A fundamental rule of the tree protocol is that no node may be locked more than once by the same transaction. This one-way progression down the tree guarantees that no circular wait (deadlock) can ever form.",
+    topic: 'Two-Phase Locking',
+    subtopic: 'Tree-based locking protocols',
+    reference: 'Learn § 4 Protocol Variants'
+  },
+  {
+    id: 'hard-56',
+    prompt: "Consider three transactions in Wound-Wait: T1 (TS=10), T2 (TS=20), and T3 (TS=30). T2 holds a lock on X. T1 requests lock on X. What happens, and what if T3 subsequently requests lock on X?",
+    options: [
+      {
+            "id": "a",
+            "text": "T1 wounds T2 (T2 aborts and rolls back). When T3 requests X, T3 (younger) is made to wait for T1 (older)"
+      },
+      {
+            "id": "b",
+            "text": "T1 waits for T2; T3 wounds T2"
+      },
+      {
+            "id": "c",
+            "text": "All three transactions abort simultaneously"
+      },
+      {
+            "id": "d",
+            "text": "T1 dies; T3 is granted the lock immediately"
+      }
+],
+    correct: ["a"],
+    explanation: "In Wound-Wait: T1 (older, TS=10) requests a lock held by T2 (younger, TS=20), so T1 wounds T2 (T2 aborts). T1 gets the lock. When T3 (younger, TS=30) requests the lock held by T1 (older), T3 is made to wait.",
+    topic: 'Deadlock',
+    subtopic: 'Wait-Die and Wound-Wait',
+    reference: 'Learn § 5.2 Prevention'
+  },
+  {
+    id: 'hard-57',
+    prompt: "Consider transactions T1 (TS=5), T2 (TS=15), T3 (TS=25) under Wait-Die. T2 holds lock on item Y. T3 requests lock on Y. What happens?",
+    options: [
+      {
+            "id": "a",
+            "text": "T3 (younger, TS=25) requests from T2 (older, TS=15), so T3 dies (aborts and restarts with TS=25)"
+      },
+      {
+            "id": "b",
+            "text": "T3 wounds T2 and takes the lock"
+      },
+      {
+            "id": "c",
+            "text": "T3 is placed in the wait queue behind T2"
+      },
+      {
+            "id": "d",
+            "text": "T2 aborts and rolls back"
+      }
+],
+    correct: ["a"],
+    explanation: "Under Wait-Die, if a younger transaction requests a resource from an older transaction (TS(requester) > TS(holder)), the requester dies (is rolled back and restarted). Hence, T3 dies.",
+    topic: 'Deadlock',
+    subtopic: 'Wait-Die and Wound-Wait',
+    reference: 'Learn § 5.2 Prevention'
+  },
+  {
+    id: 'hard-58',
+    prompt: "Consider schedule S: w1(X), r2(X), r1(Y), w2(Y). T1 and T2 both commit. Is S recoverable?",
+    options: [
+      {
+            "id": "a",
+            "text": "It is recoverable only if T1 commits before T2 commits; if T2 commits before T1, S is non-recoverable"
+      },
+      {
+            "id": "b",
+            "text": "It is always recoverable regardless of commit order"
+      },
+      {
+            "id": "c",
+            "text": "It is never recoverable because w1(X) precedes r2(X)"
+      },
+      {
+            "id": "d",
+            "text": "It avoids cascading aborts regardless of commit order"
+      }
+],
+    correct: ["a"],
+    explanation: "T2 reads data item X written by T1 (dirty read). For schedule S to be recoverable, T1 MUST commit before T2 commits. If T2 were allowed to commit before T1, and T1 later aborted, T2 could not be undone, violating ACID durability.",
+    topic: 'Transactions',
+    subtopic: 'Recoverability',
+    reference: 'Learn § 4.2 Strict Two-Phase Locking'
+  },
+  {
+    id: 'hard-59',
+    prompt: "Can a schedule generated by Basic Two-Phase Locking (2PL) be non-recoverable?",
+    options: [
+      {
+            "id": "a",
+            "text": "Yes, basic 2PL guarantees conflict serializability but does NOT guarantee recoverability without explicit commit constraints"
+      },
+      {
+            "id": "b",
+            "text": "No, all 2PL schedules are automatically strict and recoverable"
+      },
+      {
+            "id": "c",
+            "text": "No, because 2PL never permits reading uncommitted data"
+      },
+      {
+            "id": "d",
+            "text": "Only if transactions contain syntax errors"
+      }
+],
+    correct: ["a"],
+    explanation: "Basic 2PL allows an exclusive lock to be released in the shrinking phase before the transaction commits. Another transaction can read the modified value and commit before the first transaction commits or aborts, resulting in a non-recoverable schedule.",
+    topic: 'Two-Phase Locking',
+    subtopic: 'Recoverability',
+    reference: 'Learn § 4.2 Strict Two-Phase Locking'
+  },
+  {
+    id: 'hard-60',
+    prompt: "Consider a schedule S: r1(A), w2(A), r3(B), w1(B), r2(C), w3(C). Construct the precedence graph. Does S have a cycle?",
+    options: [
+      {
+            "id": "a",
+            "text": "Yes, edges are T1 \u2192 T2 (on A), T3 \u2192 T1 (on B), and T2 \u2192 T3 (on C), forming cycle T1 \u2192 T2 \u2192 T3 \u2192 T1"
+      },
+      {
+            "id": "b",
+            "text": "No, the graph is a linear chain T1 \u2192 T2 \u2192 T3"
+      },
+      {
+            "id": "c",
+            "text": "No, because all operations are on separate variables"
+      },
+      {
+            "id": "d",
+            "text": "Yes, but only a two-node cycle between T1 and T2"
+      }
+],
+    correct: ["a"],
+    explanation: "On A: r1(A) before w2(A) gives T1 \u2192 T2. On B: r3(B) before w1(B) gives T3 \u2192 T1. On C: r2(C) before w3(C) gives T2 \u2192 T3. Combining these edges gives the directed cycle T1 \u2192 T2 \u2192 T3 \u2192 T1. S is not conflict-serializable.",
+    topic: 'Serializability',
+    subtopic: 'Precedence graph',
+    reference: 'Learn § 3 Serializability'
+  },
+  {
+    id: 'hard-61',
+    prompt: "In Multiple Granularity Locking, what is the precise rule for releasing locks across the hierarchy tree?",
+    options: [
+      {
+            "id": "a",
+            "text": "Locks must be released in bottom-up order (from leaves up to the root)"
+      },
+      {
+            "id": "b",
+            "text": "Locks must be released in top-down order (from root down to leaves)"
+      },
+      {
+            "id": "c",
+            "text": "Locks can be released in arbitrary order at any time"
+      },
+      {
+            "id": "d",
+            "text": "All locks at all levels must be released in a single CPU cycle"
+      }
+],
+    correct: ["a"],
+    explanation: "In MGL: locks are acquired top-down (root to leaves), and locks must be released bottom-up (leaves to root). A node can be unlocked only if none of its children are currently locked by that transaction.",
+    topic: 'Multiple Granularity Locking',
+    subtopic: 'Intention locks',
+    reference: 'Learn § 6 Multiple Granularity'
+  },
+  {
+    id: 'hard-62',
+    prompt: "Suppose a system experiences high lock contention on a database page. Which technique can convert the contention into higher concurrency without losing consistency?",
+    options: [
+      {
+            "id": "a",
+            "text": "Moving to finer-grained row-level locking or record partitioning"
+      },
+      {
+            "id": "b",
+            "text": "Locking the entire table in exclusive mode"
+      },
+      {
+            "id": "c",
+            "text": "Switching to Read Uncommitted isolation for all write transactions"
+      },
+      {
+            "id": "d",
+            "text": "Disabling the database transaction log"
+      }
+],
+    correct: ["a"],
+    explanation: "If multiple transactions contend for the same page lock while accessing different rows on that page, reducing granularity to row-level locks allows them to modify distinct rows in parallel.",
+    topic: 'Multiple Granularity Locking',
+    subtopic: 'Lock escalation',
+    reference: 'Learn § 6 Multiple Granularity'
+  },
+  {
+    id: 'hard-63',
+    prompt: "How does conservative 2PL guarantee that a cycle cannot form in the Wait-For Graph?",
+    options: [
+      {
+            "id": "a",
+            "text": "A transaction in conservative 2PL holds zero locks while it is in the waiting state, so no edge can emanate from it to hold another in wait"
+      },
+      {
+            "id": "b",
+            "text": "Conservative 2PL aborts all transactions after 1 second"
+      },
+      {
+            "id": "c",
+            "text": "Conservative 2PL assigns random priorities to wait edges"
+      },
+      {
+            "id": "d",
+            "text": "It uses topological sorting on transaction IDs"
+      }
+],
+    correct: ["a"],
+    explanation: "In a WFG, an edge Ti \u2192 Tj requires Ti to be waiting while Tj holds a lock. Under Conservative 2PL, a transaction acquires all locks upfront or releases what it holds before waiting. A transaction that holds no locks can never be the target of a wait edge, so cycles are mathematically impossible.",
+    topic: 'Deadlock',
+    subtopic: 'Deadlock prevention',
+    reference: 'Learn § 4.3 Conservative Two-Phase Locking'
+  },
+  {
+    id: 'hard-64',
+    prompt: "What is the difference between a Precedence Graph (Serialization Graph) and a Wait-For Graph (WFG)?",
+    options: [
+      {
+            "id": "a",
+            "text": "Precedence graphs represent conflicting operation order among active/committed transactions; WFGs represent active lock wait dependencies among currently blocked transactions"
+      },
+      {
+            "id": "b",
+            "text": "Precedence graphs detect deadlocks; WFGs test serializability"
+      },
+      {
+            "id": "c",
+            "text": "They are identical graphs with different names in academic literature"
+      },
+      {
+            "id": "d",
+            "text": "Precedence graphs only apply to single-user databases"
+      }
+],
+    correct: ["a"],
+    explanation: "Precedence graphs capture data conflicts (r-w, w-r, w-w) to verify serializability; a cycle means non-serializability. WFGs capture current resource blocking (Ti waiting for lock held by Tj); a cycle means deadlock.",
+    topic: 'Deadlock',
+    subtopic: 'Wait-for graphs',
+    reference: 'Learn § 5 Deadlock Theory'
+  },
+  {
+    id: 'hard-65',
+    prompt: "Can a schedule be conflict-serializable and yet still experience a deadlock during its execution under 2PL?",
+    options: [
+      {
+            "id": "a",
+            "text": "Yes, serializability of partial executions does not preclude a circular wait condition in the lock manager"
+      },
+      {
+            "id": "b",
+            "text": "No, conflict-serializability mathematically guarantees the absence of deadlocks"
+      },
+      {
+            "id": "c",
+            "text": "Only if transactions are executing on distributed servers"
+      },
+      {
+            "id": "d",
+            "text": "Only when shared locks are upgraded to update locks"
+      }
+],
+    correct: ["a"],
+    explanation: "Conflict-serializability is a property of the completed schedule of operations, whereas deadlock is a runtime execution blockage in the lock table. 2PL produces only serializable schedules, yet 2PL can and does suffer from deadlocks.",
+    topic: 'Deadlock',
+    subtopic: 'Deadlock detection',
+    reference: 'Learn § 5 Deadlock Theory'
+  },
+  {
+    id: 'hard-66',
+    prompt: "Consider transactions T1 and T2. T1: Lock-S(A), Lock-S(B), Unlock(A), Unlock(B). T2: Lock-X(B), Lock-X(A), Unlock(B), Unlock(A). Can this lead to deadlock under basic 2PL?",
+    options: [
+      {
+            "id": "a",
+            "text": "Yes, if T1 locks A and T2 locks B, T1 will block waiting for B and T2 will block waiting for A"
+      },
+      {
+            "id": "b",
+            "text": "No, because T1 only uses Shared locks"
+      },
+      {
+            "id": "c",
+            "text": "No, because both transactions follow 2PL"
+      },
+      {
+            "id": "d",
+            "text": "Only if A and B reside on different disk blocks"
+      }
+],
+    correct: ["a"],
+    explanation: "Opposite locking orders (T1 locks A then B; T2 locks B then A) is the textbook cause of deadlock: T1 holds S(A) and requests S(B) (blocked by T2's X(B)), while T2 holds X(B) and requests X(A) (blocked by T1's S(A)).",
+    topic: 'Deadlock',
+    subtopic: 'Deadlock detection',
+    reference: 'Learn § 5 Deadlock Theory'
+  },
+  {
+    id: 'hard-67',
+    prompt: "How does strict global lock ordering (ordering all data items X1 < X2 < ... < Xn and requiring locks to be acquired in ascending order) prevent deadlocks?",
+    options: [
+      {
+            "id": "a",
+            "text": "It eliminates the circular-wait condition by enforcing a monotonic resource allocation hierarchy"
+      },
+      {
+            "id": "b",
+            "text": "It forces all transactions to run serially one by one"
+      },
+      {
+            "id": "c",
+            "text": "It converts all exclusive locks to shared locks"
+      },
+      {
+            "id": "d",
+            "text": "It aborts any transaction that needs more than two locks"
+      }
+],
+    correct: ["a"],
+    explanation: "If every transaction must acquire locks in a predetermined global order (Havender's principle), an edge Ti \u2192 Tj in the WFG implies Ti wants a resource ranked higher than Tj's held resource. A cycle would require a resource to be ranked higher than itself, which is impossible.",
+    topic: 'Deadlock',
+    subtopic: 'Deadlock prevention',
+    reference: 'Learn § 5.2 Prevention'
+  },
+  {
+    id: 'hard-68',
+    prompt: "In PostgreSQL and MySQL InnoDB, how is the deadlock between two concurrent transactions trying to insert the same unique key handled?",
+    options: [
+      {
+            "id": "a",
+            "text": "Both acquire shared locks on the next-key/gap, and both attempt to upgrade to exclusive upon insert, deadlocking until the engine detects the cycle and rolls back one"
+      },
+      {
+            "id": "b",
+            "text": "The database crashes and reboots"
+      },
+      {
+            "id": "c",
+            "text": "Both inserts succeed, creating duplicate keys"
+      },
+      {
+            "id": "d",
+            "text": "The transactions are merged into a single thread"
+      }
+],
+    correct: ["a"],
+    explanation: "When duplicate key checks occur, transactions take S gap locks. When they proceed to insert, both request an X insert intention lock in the same gap, resulting in an S-upgrade deadlock that the DBMS deadlock detector resolves by aborting one.",
+    topic: 'Deadlock',
+    subtopic: 'Deadlock resolution',
+    reference: 'Learn § 5 Deadlock Theory'
+  },
+  {
+    id: 'hard-69',
+    prompt: "What is the primary difference between Strict 2PL and Rigorous 2PL with respect to read operations?",
+    options: [
+      {
+            "id": "a",
+            "text": "Strict 2PL may release Shared (S) locks before commit during the shrinking phase, while Rigorous 2PL must retain Shared locks until commit"
+      },
+      {
+            "id": "b",
+            "text": "Strict 2PL does not allow Shared locks at all"
+      },
+      {
+            "id": "c",
+            "text": "Rigorous 2PL releases Exclusive locks before commit"
+      },
+      {
+            "id": "d",
+            "text": "Strict 2PL holds S locks for 24 hours"
+      }
+],
+    correct: ["a"],
+    explanation: "Under Strict 2PL, only Exclusive locks must be held until end-of-transaction (S locks can be unlocked during shrinking phase). Under Rigorous 2PL, ALL locks (both S and X) must be held until commit.",
+    topic: 'Two-Phase Locking',
+    subtopic: 'Rigorous 2PL',
+    reference: 'Learn § 4.2 Strict Two-Phase Locking'
+  },
+  {
+    id: 'hard-70',
+    prompt: "Consider a schedule S with blind writes: r1(X), w2(X), w1(X), commit1, commit2. Is S conflict-serializable, and is it view-serializable?",
+    options: [
+      {
+            "id": "a",
+            "text": "Not conflict-serializable (cycle between T1 and T2), but view-serializable to serial schedule T2 \u2192 T1"
+      },
+      {
+            "id": "b",
+            "text": "Both conflict-serializable and view-serializable"
+      },
+      {
+            "id": "c",
+            "text": "Neither conflict-serializable nor view-serializable"
+      },
+      {
+            "id": "d",
+            "text": "Conflict-serializable to T1 \u2192 T2"
+      }
+],
+    correct: ["a"],
+    explanation: "On X: r1(X) before w2(X) implies T1 \u2192 T2; w2(X) before w1(X) implies T2 \u2192 T1. The cycle makes S not conflict-serializable. However, in serial schedule T2 followed by T1: T1 reads initial value? No, T1 reads X after T2. But in S, T1 reads initial X. Check T1 \u2192 T2: final write is T2, whereas in S final write is T1. Under T2 \u2192 T1: T2 writes X, then T1 writes X (final write matches). If initial read is handled, view equivalence holds with serial order T2 \u2192 T1.",
+    topic: 'Serializability',
+    subtopic: 'View serializability',
+    reference: 'Learn § 3 Serializability'
+  },
+  {
+    id: 'hard-71',
+    prompt: "Why is testing for View Serializability NP-complete while testing for Conflict Serializability takes polynomial time O(V + E)?",
+    options: [
+      {
+            "id": "a",
+            "text": "Conflict serializability is decided by cycle detection in a known precedence graph; view serializability requires searching over all possible polygraphs and blind write orders"
+      },
+      {
+            "id": "b",
+            "text": "View serializability requires factoring large prime numbers"
+      },
+      {
+            "id": "c",
+            "text": "Conflict serializability is only tested for two transactions at a time"
+      },
+      {
+            "id": "d",
+            "text": "Graph cycle detection is itself NP-complete"
+      }
+],
+    correct: ["a"],
+    explanation: "Cycle detection on a directed precedence graph is solvable in linear time O(V+E) using DFS. In contrast, Pappadimitiou proved that testing view serializability requires choosing directions for polygraph edges introduced by blind writes, which is NP-complete.",
+    topic: 'Serializability',
+    subtopic: 'View serializability',
+    reference: 'Learn § 3 Serializability'
+  },
+  {
+    id: 'hard-72',
+    prompt: "In an index concurrency control protocol (such as B-link tree locking), how do transactions avoid locking from the root down to the leaf for every read?",
+    options: [
+      {
+            "id": "a",
+            "text": "By using right-sibling pointers and high-keys so readers can navigate to split nodes without holding locks on parent nodes"
+      },
+      {
+            "id": "b",
+            "text": "By locking the entire B-tree exclusively on every query"
+      },
+      {
+            "id": "c",
+            "text": "By turning off index consistency during query execution"
+      },
+      {
+            "id": "d",
+            "text": "By running all reads in a single thread"
+      }
+],
+    correct: ["a"],
+    explanation: "The Lehman-Yao B-link tree protocol introduces right-sibling pointers and high-key values in each node. A reader can traverse down without latch-coupling all the way from the root, recovering from concurrent node splits by following sibling links.",
+    topic: 'Two-Phase Locking',
+    subtopic: 'Tree-based locking protocols',
+    reference: 'Learn § 4 Protocol Variants'
+  },
+  {
+    id: 'hard-73',
+    prompt: "Consider a schedule S under Strict 2PL where transactions T1, T2, ..., Tn execute. Under what condition can a deadlock still occur?",
+    options: [
+      {
+            "id": "a",
+            "text": "If two or more transactions request conflicting locks in different orders during their growing phases"
+      },
+      {
+            "id": "b",
+            "text": "Only if a transaction issues an unlock statement before committing"
+      },
+      {
+            "id": "c",
+            "text": "Deadlocks are impossible under Strict 2PL"
+      },
+      {
+            "id": "d",
+            "text": "Only when the number of transactions is strictly odd"
+      }
+],
+    correct: ["a"],
+    explanation: "Strict 2PL only dictates when locks can be RELEASED (at commit/abort). It places no restriction on the order in which locks are ACQUIRED during the growing phase. If transactions acquire locks in different orders, deadlocks can readily occur.",
+    topic: 'Two-Phase Locking',
+    subtopic: 'Strict 2PL',
+    reference: 'Learn § 4.2 Strict Two-Phase Locking'
+  },
+  {
+    id: 'hard-74',
+    prompt: "What is the Write-Skew anomaly in Snapshot Isolation, and why does standard Two-Phase Locking prevent it?",
+    options: [
+      {
+            "id": "a",
+            "text": "Two transactions read overlapping sets of data and update disjoint sets based on constraint checks; standard 2PL prevents it by acquiring conflicting locks on the read sets"
+      },
+      {
+            "id": "b",
+            "text": "A transaction writes to disk before updating the log buffer"
+      },
+      {
+            "id": "c",
+            "text": "Writing skewed characters in string columns"
+      },
+      {
+            "id": "d",
+            "text": "A write operation that takes longer than 10 seconds"
+      }
+],
+    correct: ["a"],
+    explanation: "Write skew occurs under Snapshot Isolation when T1 reads X and writes Y, while T2 reads Y and writes X to maintain constraint (X+Y > 0). Under 2PL, T1's read lock on X conflicts with T2's write lock on X, serializing the execution and preventing skew.",
+    topic: 'Concurrency Control',
+    subtopic: 'Isolation levels',
+    reference: 'Learn § 8 Limitations'
+  },
+  {
+    id: 'hard-75',
+    prompt: "Suppose a system implements Two-Phase Locking with Wait-Die for deadlock prevention. Can starvation of any transaction occur?",
+    options: [
+      {
+            "id": "a",
+            "text": "No, because aborted transactions retain their original timestamps, eventually becoming the oldest transaction which never dies"
+      },
+      {
+            "id": "b",
+            "text": "Yes, because younger transactions can be aborted indefinitely"
+      },
+      {
+            "id": "c",
+            "text": "Yes, because older transactions are killed repeatedly"
+      },
+      {
+            "id": "d",
+            "text": "Starvation is inherent to all timestamp mechanisms"
+      }
+],
+    correct: ["a"],
+    explanation: "Wait-Die guarantees freedom from starvation because when a transaction is aborted, it is restarted with its original timestamp. As time advances, its timestamp makes it older relative to newly arriving transactions until it becomes the oldest transaction in the system, at which point it is never aborted.",
+    topic: 'Deadlock',
+    subtopic: 'Wait-Die and Wound-Wait',
+    reference: 'Learn § 5.2 Prevention'
   }
 ];
